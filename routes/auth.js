@@ -22,19 +22,20 @@ db.connect(err => {
 // Secret key for JWT
 const JWT_SECRET = 'your_jwt_secret'; // Cambia esto por una clave secreta segura
 
-// Ruta para registrar un nuevo usuario
 router.post('/register', async (req, res) => {
-    const { nombre, ap_paterno, ap_materno, email, password } = req.body;
+    const { nombre, ap_paterno, ap_materno, email, password, nivel_usuario, cedula } = req.body;
 
-    if (!nombre || !ap_paterno || !ap_materno || !email || !password) {
+    console.log('Datos recibidos del frontend:', req.body); // Para verificar los datos recibidos
+
+    if (!nombre || !ap_paterno || !ap_materno || !email || !password || !nivel_usuario || !cedula) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
     }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const query = 'INSERT INTO usuarios (nombre, ap_paterno, ap_materno, email, contraseña) VALUES (?, ?, ?, ?, ?)';
+        const query = 'INSERT INTO usuarios (nombre, ap_paterno, ap_materno, email, contraseña, nivel_usuario, cedula) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
-        db.query(query, [nombre, ap_paterno, ap_materno, email, hashedPassword], (err, results) => {
+        db.query(query, [nombre, ap_paterno, ap_materno, email, hashedPassword, nivel_usuario, cedula], (err, results) => {
             if (err) {
                 console.error('Error inserting user:', err);
                 return res.status(500).send('Error registering user.');
@@ -46,7 +47,6 @@ router.post('/register', async (req, res) => {
         res.status(500).send('Error registering user.');
     }
 });
-
 // Ruta para autenticar un usuario
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
