@@ -1,5 +1,3 @@
-// routes/solicitudes.js
-
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql2');
@@ -20,30 +18,37 @@ db.connect(err => {
     console.log('Connected to the database.');
 });
 
-// Definir rutas
 // Obtener todas las solicitudes de cirugía
 router.get('/', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia', (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send(err);
-        } else {
-            res.json(results);
-        }
+      if (err) {
+        console.error('Error fetching solicitudes:', err);
+        res.status(500).json({ error: 'Error fetching solicitudes' });
+      } else {
+        // **Set Content-Type header to 'application/json'**
+        res.setHeader('Content-Type', 'application/json');
+  
+        // **Send JSON response**
+        res.json(results);
+      }
     });
-});
-
-// Crear una nueva solicitud de cirugía
-router.post('/', (req, res) => {
+  });
+  
+  // Crear una nueva solicitud de cirugía
+  router.post('/', (req, res) => {
     const solicitud = req.body;
     db.query('INSERT INTO solicitudes_cirugia SET ?', solicitud, (err, result) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send(err);
-        } else {
-            res.status(201).send(result);
-        }
+      if (err) {
+        console.error('Error creating solicitud:', err);
+        res.status(500).json({ error: 'Error creating solicitud' });
+      } else {
+        // **Set Content-Type header to 'application/json'**
+        res.setHeader('Content-Type', 'application/json');
+  
+        // **Send JSON response**
+        res.json(result);
+      }
     });
-});
-
-module.exports = router;
+  });
+  
+  module.exports = router;
