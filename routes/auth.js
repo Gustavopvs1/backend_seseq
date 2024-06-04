@@ -38,18 +38,20 @@ router.post('/register', async (req, res) => {
         db.query(query, [nombre, ap_paterno, ap_materno, email, hashedPassword, nivel_usuario, cedula], (err, results) => {
             if (err) {
                 console.error('Error inserting user:', err);
-                return res.status(500).send('Error registering user.');
+                return res.status(500).json({ message: 'Error registering user.' });
             }
-            res.status(201).send('User registered successfully.');
+            res.status(201).json({message: 'User registered successfully.'});
         });
     } catch (error) {
         console.error('Error registering user:', error);
-        res.status(500).send('Error registering user.');
+        res.status(500).json('Error registering user.');
     }
 });
 // Ruta para autenticar un usuario
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
+
+    console.log('Datos recibidos del frontend:', req.body);
 
     if (!email || !password) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
@@ -60,24 +62,24 @@ router.post('/login', (req, res) => {
     db.query(query, [email], async (err, results) => {
         if (err) {
             console.error('Error fetching user:', err);
-            return res.status(500).send('Error logging in.');
+            return res.status(500).json({ message: 'Error login in' });
         }
 
         if (results.length === 0) {
-            return res.status(401).send('Invalid email or password.');
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
 
         const user = results[0];
         const isPasswordValid = await bcrypt.compare(password, user.contraseña);
 
         if (!isPasswordValid) {
-            return res.status(401).send('Invalid email or password.');
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
 
-        // Generar un token JWT y enviarlo al cliente
         const token = jwt.sign({ id: user.id_usuario, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ message: 'Login successful.', token });
     });
 });
+
 
 module.exports = router;
