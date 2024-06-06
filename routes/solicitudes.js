@@ -14,6 +14,11 @@ const formatDate = (date) => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+// Función para eliminar guiones de las fechas
+const removeDashes = (dateString) => {
+    return dateString.replace(/-/g, '');
+};
+
 // Obtener todas las solicitudes de cirugía
 router.get('/', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia', (err, results) => {
@@ -45,7 +50,7 @@ router.post('/', (req, res) => {
         }
     }
 
-    // Formatear las fechas antes de la inserción
+    // Darle formato a las fechas antes de la inserción
     solicitud.fecha_solicitud = formatDate(solicitud.fecha_solicitud);
     solicitud.fecha_nacimiento = formatDate(solicitud.fecha_nacimiento);
     solicitud.fecha_solicitada = formatDate(solicitud.fecha_solicitada);
@@ -60,7 +65,9 @@ router.post('/', (req, res) => {
             const id_solicitud = result.insertId;
 
             // Generar el folio
-            const folio = `${solicitud.fecha_solicitud.split(' ')[0]}-${solicitud.clave_esp}-${solicitud.fecha_solicitada.split(' ')[0]}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}`;
+            const formattedFechaSolicitud = removeDashes(solicitud.fecha_solicitud.split(' ')[0]);
+            const formattedFechaSolicitada = removeDashes(solicitud.fecha_solicitada.split(' ')[0]);
+            const folio = `${formattedFechaSolicitud}-${solicitud.clave_esp}-${formattedFechaSolicitada}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}`;
 
             console.log('Folio generado:', folio);
 
