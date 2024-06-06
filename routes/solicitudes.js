@@ -27,6 +27,46 @@ router.get('/', (req, res) => {
     });
 });
 
+// Obtener los valores enum para los campos especificados
+router.get('/enums', (req, res) => {
+    const enumFields = [
+        'clave_esp',
+        'tipo_intervencion',
+        'turno_solicitado',
+        'sala_quirofano',
+        'req_insumo',
+        'tipo_admision',
+        'estado_solicitud'
+    ];
+
+    const enumQueries = enumFields.map(field => {
+        return new Promise((resolve, reject) => {
+            db.query(`SHOW COLUMNS FROM solicitudes_cirugia LIKE '${field}'`, (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const enumValues = results[0].Type.match(/enum\(([^)]+)\)/)[1].split(',').map(value => value.replace(/'/g, ''));
+                    resolve({ field, values: enumValues });
+                }
+            });
+        });
+    });
+
+    Promise.all(enumQueries)
+        .then(results => {
+            const enums = results.reduce((acc, { field, values }) => {
+                acc[field] = values;
+                return acc;
+            }, {});
+            res.setHeader('Content-Type', 'application/json');
+            res.json(enums);
+        })
+        .catch(err => {
+            console.error('Error fetching enum values:', err);
+            res.status(500).json({ error: 'Error fetching enum values' });
+        });
+});
+
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
     const solicitud = req.body;
