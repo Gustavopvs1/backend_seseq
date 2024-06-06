@@ -6,6 +6,20 @@ const db = require('../database/db'); // Importar la conexión a la base de dato
 
 const JWT_SECRET = 'your_jwt_secret';
 
+// Middleware de autenticación
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+};
+
 // Registrar un usuario
 router.post('/register', async (req, res) => {
     const { nombre, ap_paterno, ap_materno, email, password, nivel_usuario, cedula } = req.body;
@@ -62,5 +76,29 @@ router.post('/login', (req, res) => {
         res.json({ message: 'Login successful.', token });
     });
 });
+
+// Ruta para obtener información del usuario autenticado
+router.get('/user', authenticateToken, (req, res) => {
+    const query = 'SELECT nombre, ap_paterno, ap_materno FROM usuarios WHERE id_usuario = ?';
+
+    db.query(query, [req.user.id], (err, results) => {
+        if (err) {
+            console.error('Error fetching user info:', err);
+            return res.status(500).json({ message: 'Error fetching user info.' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const user = results[0];
+        res.json({
+            nombre: user.nombre,
+            ap_paterno: user.ap_paterno,
+            ap_materno: user.ap_materno,
+        });
+    });
+});
+
 
 module.exports = router;
