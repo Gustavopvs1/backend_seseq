@@ -32,16 +32,32 @@ router.get('/', (req, res) => {
     });
 });
 
+// Obtener una solicitud por CURP
+router.get('/curp/:curp', (req, res) => {
+    const curp = req.params.curp;
+    db.query('SELECT * FROM solicitudes_cirugia WHERE curp = ?', [curp], (err, results) => {
+        if (err) {
+            console.error('Error fetching solicitud by curp:', err);
+            res.status(500).json({ error: 'Error fetching solicitud by curp' });
+        } else if (results.length === 0) {
+            res.status(404).json({ error: 'Solicitud not found' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results[0]);
+        }
+    });
+});
+
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
     const solicitud = req.body;
 
     // Validar campos requeridos
     const requiredFields = [
-        'fecha_solicitud', 'id_especialidad', 'clave_esp', 'nombre_especialidad', 'curp', 'ap_paterno',
+        'fecha_solicitud', 'clave_esp', 'nombre_especialidad', 'curp', 'ap_paterno',
         'ap_materno', 'nombre_paciente', 'fecha_nacimiento', 'edad', 'sexo', 'no_expediente',
         'tipo_intervencion', 'fecha_solicitada', 'hora_solicitada', 'tiempo_estimado', 'turno_solicitado',
-        'sala_quirofano', 'id_cirujano', 'req_insumo', 'insumos', 'tipo_admision', 'estado_solicitud'
+        'sala_quirofano', 'id_cirujano', 'req_insumo', 'insumos', 'tipo_admision', 'estado_solicitud', 'procedimientos_paciente'
     ];
 
     for (const field of requiredFields) {
@@ -81,6 +97,47 @@ router.post('/', (req, res) => {
                     res.json({ message: 'Solicitud creada exitosamente.', id: id_solicitud, folio: folio });
                 }
             });
+        }
+    });
+});
+
+// Actualizar una solicitud de cirugía
+router.put('/:id', (req, res) => {
+    const id = req.params.id;
+    const updatedData = req.body;
+
+    // Darle formato a las fechas antes de la actualización
+    if (updatedData.fecha_solicitud) {
+        updatedData.fecha_solicitud = formatDate(updatedData.fecha_solicitud);
+    }
+    if (updatedData.fecha_nacimiento) {
+        updatedData.fecha_nacimiento = formatDate(updatedData.fecha_nacimiento);
+    }
+    if (updatedData.fecha_solicitada) {
+        updatedData.fecha_solicitada = formatDate(updatedData.fecha_solicitada);
+    }
+
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
+        if (err) {
+            console.error('Error updating solicitud:', err);
+            res.status(500).json({ error: 'Error updating solicitud', details: err.message });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud actualizada exitosamente.' });
+        }
+    });
+});
+
+// Eliminar una solicitud de cirugía
+router.delete('/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('DELETE FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting solicitud:', err);
+            res.status(500).json({ error: 'Error deleting solicitud', details: err.message });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud eliminada exitosamente.' });
         }
     });
 });
