@@ -32,13 +32,13 @@ router.get('/', (req, res) => {
     });
 });
 
-// Obtener una solicitud por CURP
-router.get('/curp/:curp', (req, res) => {
-    const curp = req.params.curp;
-    db.query('SELECT * FROM solicitudes_cirugia WHERE curp = ?', [curp], (err, results) => {
+// Obtener una solicitud por ID
+router.get('/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('SELECT * FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
         if (err) {
-            console.error('Error fetching solicitud by curp:', err);
-            res.status(500).json({ error: 'Error fetching solicitud by curp' });
+            console.error('Error fetching solicitud by id:', err);
+            res.status(500).json({ error: 'Error fetching solicitud by id' });
         } else if (results.length === 0) {
             res.status(404).json({ error: 'Solicitud not found' });
         } else {
@@ -47,6 +47,7 @@ router.get('/curp/:curp', (req, res) => {
         }
     });
 });
+
 
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {

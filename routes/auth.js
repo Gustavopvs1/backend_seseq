@@ -25,7 +25,7 @@ router.post('/register', async (req, res) => {
     const { nombre, ap_paterno, ap_materno, email, password, nivel_usuario, cedula } = req.body;
 
     if (!nombre || !ap_paterno || !ap_materno || !email || !password || !nivel_usuario || !cedula) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
     try {
