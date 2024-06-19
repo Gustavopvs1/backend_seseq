@@ -4,6 +4,7 @@ const db = require('../database/db'); // Importar la conexión a la base de dato
 
 // Función para convertir fechas al formato MySQL
 const formatDate = (date) => {
+    if (!date) return null; // Devolver null si la fecha no es válida
     const d = new Date(date);
     const year = d.getFullYear();
     const month = ('0' + (d.getMonth() + 1)).slice(-2);
@@ -32,6 +33,21 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/pendientes', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => {
+    if (err) {
+    console.error('Error fetching solicitud by status:', err);
+    res.status(500).json({ error: 'Error fetching solicitud by status' });
+    } else if (results.length === 0) {
+    res.status(404).json({ error: 'No hay solicitudes pendientes' });
+    } else {
+    res.setHeader('Content-Type', 'application/json');
+    res.json(results);
+    }
+    });
+    });
+
+
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
     const id = req.params.id;
@@ -46,8 +62,7 @@ router.get('/:id', (req, res) => {
             res.json(results[0]);
         }
     });
-});
-
+});  
 
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
@@ -70,7 +85,7 @@ router.post('/', (req, res) => {
 
     // Darle formato a las fechas antes de la inserción
     solicitud.fecha_solicitud = formatDate(solicitud.fecha_solicitud);
-    solicitud.fecha_nacimiento = formatDate(solicitud.fecha_nacimiento);
+    solicitud.fecha_nacimiento = formatDate(solicitud.fecha_nacimiento) || null;
     solicitud.fecha_solicitada = formatDate(solicitud.fecha_solicitada);
 
     console.log('Datos a insertar en la base de datos:', solicitud);
@@ -113,7 +128,7 @@ router.put('/:id', (req, res) => {
         updatedData.fecha_solicitud = formatDate(updatedData.fecha_solicitud);
     }
     if (updatedData.fecha_nacimiento) {
-        updatedData.fecha_nacimiento = formatDate(updatedData.fecha_nacimiento);
+        updatedData.fecha_nacimiento = formatDate(updatedData.fecha_nacimiento) || null;
     }
     if (updatedData.fecha_solicitada) {
         updatedData.fecha_solicitada = formatDate(updatedData.fecha_solicitada);
