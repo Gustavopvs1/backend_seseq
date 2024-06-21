@@ -35,18 +35,17 @@ router.get('/', (req, res) => {
 
 router.get('/pendientes', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => {
-    if (err) {
-    console.error('Error fetching solicitud by status:', err);
-    res.status(500).json({ error: 'Error fetching solicitud by status' });
-    } else if (results.length === 0) {
-    res.status(404).json({ error: 'No hay solicitudes pendientes' });
-    } else {
-    res.setHeader('Content-Type', 'application/json');
-    res.json(results);
-    }
+        if (err) {
+            console.error('Error fetching solicitud by status:', err);
+            res.status(500).json({ error: 'Error fetching solicitud by status' });
+        } else if (results.length === 0) {
+            res.status(404).json({ error: 'No hay solicitudes pendientes' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
     });
-    });
-
+});
 
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
@@ -144,6 +143,42 @@ router.put('/:id', (req, res) => {
         }
     });
 });
+
+// Endpoint para actualizar una solicitud pendiente con los nuevos campos
+router.put('/programar/:id', (req, res) => {
+    const id = req.params.id;
+    const updatedData = req.body;
+
+    // Validar campos requeridos
+    const requiredFields = [
+       'fecha_programada', 'hora_asignada', 'turno', 'piso', 'nombre_anestesiologo'
+    ];
+
+    for (const field of requiredFields) {
+        if (!updatedData[field]) {
+            return res.status(400).json({ error: `El campo ${field} es requerido.` });
+        }
+    }
+
+    // Darle formato a las fechas y horas antes de la actualización
+    if (updatedData.fecha_programada) {
+        updatedData.fecha_programada = formatDate(updatedData.fecha_programada);
+    }
+
+    // Establecer el estado de la solicitud a "Programada"
+    updatedData.estado_solicitud = 'Programada';
+
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
+        if (err) {
+            console.error('Error updating solicitud:', err);
+            res.status(500).json({ error: 'Error updating solicitud', details: err.message });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud actualizada exitosamente.' });
+        }
+    });
+});
+
 
 // Eliminar una solicitud de cirugía
 router.delete('/:id', (req, res) => {
