@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db'); // Importar la conexión a la base de datos
 
-// Función para convertir fechas al formato MySQL
 const formatDate = (date) => {
     if (!date) return null; // Devolver null si la fecha no es válida
     const d = new Date(date);
@@ -13,6 +12,16 @@ const formatDate = (date) => {
     const minutes = ('0' + d.getMinutes()).slice(-2);
     const seconds = ('0' + d.getSeconds()).slice(-2);
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+// Formato de fechas para visualización
+const formatDateForDisplay = (date) => {
+    if (!date) return null; // Devolver null si la fecha no es válida
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
 };
 
 // Función para eliminar guiones de las fechas
@@ -27,11 +36,17 @@ router.get('/', (req, res) => {
             console.error('Error fetching solicitudes:', err);
             res.status(500).json({ error: 'Error fetching solicitudes' });
         } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
         }
     });
 });
+
 
 router.get('/pendientes', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => {
@@ -41,11 +56,37 @@ router.get('/pendientes', (req, res) => {
         } else if (results.length === 0) {
             res.status(404).json({ error: 'No hay solicitudes pendientes' });
         } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
         }
     });
 });
+
+
+// Obtener todas las solicitudes programadas
+router.get('/programadas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Programada"', (err, results) => {
+        if (err) {
+            console.error('Error fetching programadas:', err);
+            res.status(500).json({ error: 'Error fetching programadas' });
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
+
 
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
@@ -57,11 +98,16 @@ router.get('/:id', (req, res) => {
         } else if (results.length === 0) {
             res.status(404).json({ error: 'Solicitud not found' });
         } else {
+            const solicitud = results[0];
+            // Formatear las fechas para visualización
+            solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+            solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             res.setHeader('Content-Type', 'application/json');
-            res.json(results[0]);
+            res.json(solicitud);
         }
     });
-});  
+});
+
 
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
