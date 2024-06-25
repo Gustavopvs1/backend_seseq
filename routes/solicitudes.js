@@ -193,26 +193,28 @@ router.put('/:id', (req, res) => {
 // Endpoint para actualizar una solicitud pendiente con los nuevos campos
 router.put('/programar/:id', (req, res) => {
     const id = req.params.id;
-    const updatedData = req.body;
+    const { fecha_programada, hora_asignada, turno, nombre_anestesiologo } = req.body;
 
     // Validar campos requeridos
-    const requiredFields = [
-       'fecha_programada', 'hora_asignada', 'turno', 'piso', 'nombre_anestesiologo'
-    ];
-
-    for (const field of requiredFields) {
-        if (!updatedData[field]) {
-            return res.status(400).json({ error: `El campo ${field} es requerido.` });
-        }
-    }
-
-    // Darle formato a las fechas y horas antes de la actualización
-    if (updatedData.fecha_programada) {
-        updatedData.fecha_programada = formatDate(updatedData.fecha_programada);
+    if (!fecha_programada || !hora_asignada || !turno || !nombre_anestesiologo) {
+        return res.status(400).json({ error: 'Todos los campos son requeridos para programar la cita.' });
     }
 
     // Establecer el estado de la solicitud a "Programada"
-    updatedData.estado_solicitud = 'Programada';
+    const updatedData = {
+        fecha_programada,
+        hora_asignada,
+        turno,
+        nombre_anestesiologo
+    };
+
+        // Darle formato a las fechas y horas antes de la actualización
+        if (updatedData.fecha_programada) {
+            updatedData.fecha_programada = formatDate(updatedData.fecha_programada);
+        }
+
+        // Establecer el estado de la solicitud a "Programada"
+        updatedData.estado_solicitud = 'Programada';
 
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
         if (err) {
