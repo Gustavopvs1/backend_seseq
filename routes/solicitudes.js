@@ -86,6 +86,23 @@ router.get('/programadas', (req, res) => {
     });
 });
 
+// Obtener todas las solicitudes programadas
+router.get('/suspendidas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Suspendida"', (err, results) => {
+        if (err) {
+            console.error('Error fetching suspendidas:', err);
+            res.status(500).json({ error: 'Error fetching suspendidas' });
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
 
 
 // Obtener una solicitud por ID
@@ -226,6 +243,21 @@ router.put('/programar/:id', (req, res) => {
         }
     });
 });
+
+// Suspender una solicitud
+router.put('/suspender/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ? WHERE id_solicitud = ?', ['Suspendida', id], (err, result) => {
+        if (err) {
+            console.error('Error suspendiendo solicitud:', err);
+            res.status(500).json({ error: 'Error suspendiendo solicitud' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud suspendida exitosamente' });
+        }
+    });
+});
+
 
 
 // Eliminar una solicitud de cirugía
