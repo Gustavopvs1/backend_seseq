@@ -40,6 +40,7 @@ router.get('/', (req, res) => {
             results.forEach(solicitud => {
                 solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
                 solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -60,6 +61,7 @@ router.get('/pendientes', (req, res) => {
             results.forEach(solicitud => {
                 solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
                 solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -79,6 +81,7 @@ router.get('/programadas', (req, res) => {
             results.forEach(solicitud => {
                 solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
                 solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -97,6 +100,7 @@ router.get('/suspendidas', (req, res) => {
             results.forEach(solicitud => {
                 solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
                 solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -119,6 +123,7 @@ router.get('/:id', (req, res) => {
             // Formatear las fechas para visualización
             solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
             solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+            solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
             res.setHeader('Content-Type', 'application/json');
             res.json(solicitud);
         }
