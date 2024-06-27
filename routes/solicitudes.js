@@ -1,18 +1,7 @@
+// solicitudes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db'); // Importar la conexión a la base de datos
-
-const formatDate = (date) => {
-    if (!date) return null; // Devolver null si la fecha no es válida
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = ('0' + (d.getMonth() + 1)).slice(-2);
-    const day = ('0' + d.getDate()).slice(-2);
-    const hours = ('0' + d.getHours()).slice(-2);
-    const minutes = ('0' + d.getMinutes()).slice(-2);
-    const seconds = ('0' + d.getSeconds()).slice(-2);
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
 
 // Formato de fechas para visualización
 const formatDateForDisplay = (date) => {
@@ -48,7 +37,6 @@ router.get('/', (req, res) => {
     });
 });
 
-
 router.get('/pendientes', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => {
         if (err) {
@@ -69,8 +57,6 @@ router.get('/pendientes', (req, res) => {
     });
 });
 
-
-// Obtener todas las solicitudes programadas
 router.get('/programadas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Programada"', (err, results) => {
         if (err) {
@@ -89,7 +75,6 @@ router.get('/programadas', (req, res) => {
     });
 });
 
-// Obtener todas las solicitudes programadas
 router.get('/suspendidas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Suspendida"', (err, results) => {
         if (err) {
@@ -107,7 +92,6 @@ router.get('/suspendidas', (req, res) => {
         }
     });
 });
-
 
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
@@ -130,7 +114,6 @@ router.get('/:id', (req, res) => {
     });
 });
 
-
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
     const solicitud = req.body;
@@ -150,10 +133,7 @@ router.post('/', (req, res) => {
         }
     }
 
-    // Darle formato a las fechas antes de la inserción
-    solicitud.fecha_solicitud = formatDate(solicitud.fecha_solicitud);
-    solicitud.fecha_nacimiento = formatDate(solicitud.fecha_nacimiento) || null;
-    solicitud.fecha_solicitada = formatDate(solicitud.fecha_solicitada);
+
 
     console.log('Datos a insertar en la base de datos:', solicitud);
 
@@ -190,16 +170,6 @@ router.put('/:id', (req, res) => {
     const id = req.params.id;
     const updatedData = req.body;
 
-    // Darle formato a las fechas antes de la actualización
-    if (updatedData.fecha_solicitud) {
-        updatedData.fecha_solicitud = formatDate(updatedData.fecha_solicitud);
-    }
-    if (updatedData.fecha_nacimiento) {
-        updatedData.fecha_nacimiento = formatDate(updatedData.fecha_nacimiento) || null;
-    }
-    if (updatedData.fecha_solicitada) {
-        updatedData.fecha_solicitada = formatDate(updatedData.fecha_solicitada);
-    }
 
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
         if (err) {
@@ -230,13 +200,9 @@ router.put('/programar/:id', (req, res) => {
         nombre_anestesiologo
     };
 
-        // Darle formato a las fechas y horas antes de la actualización
-        if (updatedData.fecha_programada) {
-            updatedData.fecha_programada = formatDate(updatedData.fecha_programada);
-        }
 
-        // Establecer el estado de la solicitud a "Programada"
-        updatedData.estado_solicitud = 'Programada';
+    // Establecer el estado de la solicitud a "Programada"
+    updatedData.estado_solicitud = 'Programada';
 
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
         if (err) {
@@ -262,8 +228,6 @@ router.put('/suspender/:id', (req, res) => {
         }
     });
 });
-
-
 
 // Eliminar una solicitud de cirugía
 router.delete('/:id', (req, res) => {
