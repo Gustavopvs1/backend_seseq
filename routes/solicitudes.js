@@ -259,9 +259,9 @@ router.put('/suspender/:id', (req, res) => {
 router.put('/reprogramar/:id', (req, res) => {
     const id = req.params.id;
     
-    // Establecer el estado de la solicitud a "Pendiente" y limpiar campos relacionados
+    
     const updatedData = {
-        estado_solicitud: 'Pendiente',
+        estado_solicitud: 'Pre-programada',
         fecha_programada: null,
         hora_asignada: null,
         turno: null,
