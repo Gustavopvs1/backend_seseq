@@ -1,4 +1,3 @@
-// solicitudes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db'); // Importar la conexión a la base de datos
@@ -93,6 +92,25 @@ router.get('/suspendidas', (req, res) => {
     });
 });
 
+// Obtener solicitudes pre-programadas
+router.get('/preprogramadas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => {
+        if (err) {
+            console.error('Error fetching preprogramadas:', err);
+            res.status(500).json({ error: 'Error fetching preprogramadas' });
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
     const id = req.params.id;
@@ -133,8 +151,6 @@ router.post('/', (req, res) => {
         }
     }
 
-
-
     console.log('Datos a insertar en la base de datos:', solicitud);
 
     db.query('INSERT INTO solicitudes_cirugia SET ?', solicitud, (err, result) => {
@@ -170,7 +186,6 @@ router.put('/:id', (req, res) => {
     const id = req.params.id;
     const updatedData = req.body;
 
-
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
         if (err) {
             console.error('Error updating solicitud:', err);
@@ -182,7 +197,21 @@ router.put('/:id', (req, res) => {
     });
 });
 
-// Endpoint para actualizar una solicitud pendiente con los nuevos campos
+// Suspender una solicitud
+router.put('/preprogramar/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ? WHERE id_solicitud = ?', ['Pre-programada', id], (err, result) => {
+        if (err) {
+            console.error('Error suspendiendo solicitud:', err);
+            res.status(500).json({ error: 'Error preprogramando solicitud' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud preprogramada exitosamente' });
+        }
+    });
+});
+
+// Endpoint para actualizar una solicitud pre-programada a programada
 router.put('/programar/:id', (req, res) => {
     const id = req.params.id;
     const { fecha_programada, hora_asignada, turno, nombre_anestesiologo } = req.body;
@@ -197,12 +226,9 @@ router.put('/programar/:id', (req, res) => {
         fecha_programada,
         hora_asignada,
         turno,
-        nombre_anestesiologo
+        nombre_anestesiologo,
+        estado_solicitud: 'Programada'
     };
-
-
-    // Establecer el estado de la solicitud a "Programada"
-    updatedData.estado_solicitud = 'Programada';
 
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
         if (err) {
@@ -210,7 +236,7 @@ router.put('/programar/:id', (req, res) => {
             res.status(500).json({ error: 'Error updating solicitud', details: err.message });
         } else {
             res.setHeader('Content-Type', 'application/json');
-            res.json({ message: 'Solicitud actualizada exitosamente.' });
+            res.json({ message: 'Solicitud actualizada exitosamente a Programada.' });
         }
     });
 });
@@ -225,6 +251,30 @@ router.put('/suspender/:id', (req, res) => {
         } else {
             res.setHeader('Content-Type', 'application/json');
             res.json({ message: 'Solicitud suspendida exitosamente' });
+        }
+    });
+});
+
+// Reprogramar una solicitud suspendida
+router.put('/reprogramar/:id', (req, res) => {
+    const id = req.params.id;
+    
+    // Establecer el estado de la solicitud a "Pendiente" y limpiar campos relacionados
+    const updatedData = {
+        estado_solicitud: 'Pendiente',
+        fecha_programada: null,
+        hora_asignada: null,
+        turno: null,
+        nombre_anestesiologo: null
+    };
+    
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
+        if (err) {
+            console.error('Error reprogramando solicitud:', err);
+            res.status(500).json({ error: 'Error reprogramando solicitud' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud reprogramada exitosamente.' });
         }
     });
 });
