@@ -2,15 +2,16 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db'); // Importar la conexión a la base de datos
 
-// Formato de fechas para visualización
 const formatDateForDisplay = (date) => {
     if (!date) return null; // Devolver null si la fecha no es válida
     const d = new Date(date);
-    const year = d.getFullYear();
-    const month = ('0' + (d.getMonth() + 1)).slice(-2);
-    const day = ('0' + d.getDate()).slice(-2);
-    return `${year}-${month}-${day}`;
+    const year = d.getUTCFullYear();
+    const month = ('0' + (d.getUTCMonth() + 1)).slice(-2);
+    const day = ('0' + d.getUTCDate()).slice(-2);
+    const formattedDate = `${year}-${month}-${day}`;
+    return formattedDate;
 };
+
 
 // Función para eliminar guiones de las fechas
 const removeDashes = (dateString) => {
