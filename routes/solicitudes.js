@@ -112,6 +112,28 @@ router.get('/preprogramadas', (req, res) => {
     });
 });
 
+// Endpoint para obtener los procedimientos con búsqueda
+router.get('/procedimientos', (req, res) => {
+    const searchQuery = req.query.q || '';
+
+    // Construir la consulta para buscar procedimientos que coincidan con el término de búsqueda
+    const sqlQuery = `
+        SELECT * FROM procedimientos
+        WHERE nombre_procedimiento LIKE ?`;
+
+    // El comodín '%' se usa para buscar cualquier ocurrencia del término de búsqueda
+    db.query(sqlQuery, [`%${searchQuery}%`], (err, results) => {
+        if (err) {
+            console.error('Error fetching procedimientos:', err);
+            res.status(500).json({ error: 'Error fetching procedimientos' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
+
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
     const id = req.params.id;
