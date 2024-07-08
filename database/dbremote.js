@@ -12,6 +12,8 @@ const sshOptions = {
     privateKey: fs.readFileSync(process.env.SSH_KEY_PATH)
 };
 
+let tunnel; // Variable para almacenar la instancia del túnel SSH
+
 function mySimpleTunnel(sshOptions, port, autoClose = true) {
     const forwardOptions = {
         srcAddr: '127.0.0.1',
@@ -33,10 +35,16 @@ function mySimpleTunnel(sshOptions, port, autoClose = true) {
 
 const connectToDb = async () => {
     try {
-        const [server, conn] = await mySimpleTunnel(sshOptions, port);
+        // Verificar si ya hay un túnel activo
+        if (!tunnel) {
+            // Si no hay túnel activo, crear uno nuevo
+            [tunnel] = await mySimpleTunnel(sshOptions, port);
+            console.log('SSH tunnel established successfully.');
+        } else {
+            console.log('Reusing existing SSH tunnel.');
+        }
 
-        console.log('SSH tunnel established successfully.');
-
+        // Configurar la conexión a la base de datos remota
         const dbRemote = mysql.createConnection({
             host: '127.0.0.1',
             port: port,
@@ -45,10 +53,21 @@ const connectToDb = async () => {
             database: process.env.DB2_NAME
         });
 
-        dbRemote.connect(err => {
+        // Manejar eventos de error y desconexión
+        dbRemote.on('error', (err) => {
+            console.error('Database error:', err);
+            // Intentar reconectar o manejar según tu lógica de aplicación
+        });
+
+        dbRemote.on('end', () => {
+            console.log('Database connection closed.');
+        });
+
+        // Conectar a la base de datos remota
+        dbRemote.connect((err) => {
             if (err) {
                 console.error('Error connecting to the remote database:', err);
-                return;
+                throw err;
             }
             console.log('Connected to the remote database.');
         });
