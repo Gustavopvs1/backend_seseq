@@ -22,7 +22,7 @@ router.get('/anestesiologos', (req, res) => {
             // Formatear las fechas para visualización
             results.forEach(anestesiologo => {
                 anestesiologo.dia_anestesio = formatDateForDisplay(anestesiologo.dia_anestesio);
-                        });
+            });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
         }
@@ -31,19 +31,20 @@ router.get('/anestesiologos', (req, res) => {
 
 // Endpoint para guardar un nuevo anestesiólogo
 router.post('/anestesiologos', (req, res) => {
-    const { nombre, hora_anestesio, dia_anestesio, turno_anestesio, sala_anestesio } = req.body;
+    const { nombre, dia_anestesio, turno_anestesio, sala_anestesio, hora_inicio, hora_fin } = req.body;
 
     // Validar campos requeridos
-    if (!nombre || !hora_anestesio || !dia_anestesio || !turno_anestesio || !sala_anestesio) {
+    if (!nombre || !dia_anestesio || !turno_anestesio || !sala_anestesio || !hora_inicio || !hora_fin) {
         return res.status(400).json({ error: 'Todos los campos son requeridos.' });
     }
 
     const newAnestesio = {
         nombre,
-        hora_anestesio,
         dia_anestesio,
         turno_anestesio,
-        sala_anestesio
+        sala_anestesio,
+        hora_inicio,
+        hora_fin
     };
 
     db.query('INSERT INTO anestesiologos SET ?', newAnestesio, (err, result) => {
@@ -56,5 +57,36 @@ router.post('/anestesiologos', (req, res) => {
         }
     });
 });
+
+// Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
+// Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
+router.get('/anestesiologo', (req, res) => {
+    const { fecha_programada, turno, sala_quirofano } = req.query;
+
+    if (!fecha_programada || !turno || !sala_quirofano) {
+        return res.status(400).json({ error: 'Los parámetros fecha_programada, turno y sala_quirofano son requeridos.' });
+    }
+
+    const query = `
+        SELECT nombre
+        FROM anestesiologos
+        WHERE dia_anestesio = ? AND turno_anestesio = ? AND sala_anestesio = ?
+    `;
+
+    db.query(query, [fecha_programada, turno, sala_quirofano], (err, results) => {
+        if (err) {
+            console.error('Error fetching anestesiologo:', err);
+            res.status(500).json({ error: 'Error fetching anestesiologo' });
+        } else {
+            if (results.length > 0) {
+                res.setHeader('Content-Type', 'application/json');
+                res.json(results[0]);
+            } else {
+                res.status(404).json({ error: 'No se encontró un anestesiólogo asignado para los parámetros proporcionados.' });
+            }
+        }
+    });
+});
+
 
 module.exports = router;
