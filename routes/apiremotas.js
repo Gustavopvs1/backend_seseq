@@ -63,4 +63,44 @@ AND Status = 'Activo'
     }
 });
 
+router.get('/cirujanos/activos', async (req, res) => {
+    try {
+        const dbRemote = await connectToDb(); // Esperar la conexión a la base de datos
+
+        const query = `
+SELECT 
+  CONCAT(Nombre, '', Paterno, '', Materno) AS nombre_completo
+FROM 
+  vw_Medicos
+WHERE 
+  Puesto IN (
+    'MEDICO ESPECIALISTA "A"',
+    'MEDICO ESPECIALISTA "B"',
+    'MEDICO ESPECIALISTA "C"',
+    'MEDICO GENERAL "A"',
+    'MEDICO GENERAL "B"',
+    'MEDICO GENERAL "C"',
+    'MEDICO RESIDENTE 1ER GRADO',
+    'MEDICO RESIDENTE 2DO GRADO',
+    'MEDICO RESIDENTE 3ER GRADO',
+    'MEDICO RESIDENTE 4TO GRADO'
+  ) 
+AND Status = 'Activo'
+        `;
+
+        dbRemote.query(query, (error, results) => {
+            if (error) {
+                console.error('Error fetching active surgeons:', error);
+                res.status(500).json({ error: 'Error fetching active surgeons' });
+                return;
+            }
+
+            res.json(results);
+        });
+    } catch (error) {
+        console.error('Error establishing SSH connection:', error);
+        res.status(500).json({ error: 'Error establishing SSH connection' });
+    }
+});
+
 module.exports = router;
