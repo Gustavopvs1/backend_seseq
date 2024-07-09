@@ -164,7 +164,7 @@ router.post('/', (req, res) => {
         'fecha_solicitud', 'clave_esp', 'nombre_especialidad', 'ap_paterno',
         'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
         'hora_solicitada', 'tiempo_estimado', 'turno_solicitado', 'sala_quirofano',
-        'id_cirujano', 'req_insumo', 'tipo_admision', 'estado_solicitud',
+        'nombre_cirujano', 'req_insumo', 'tipo_admision', 'estado_solicitud',
         'procedimientos_paciente'
     ];
 
