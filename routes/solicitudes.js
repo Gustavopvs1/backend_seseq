@@ -165,7 +165,7 @@ router.post('/', (req, res) => {
         'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
         'hora_solicitada', 'tiempo_estimado', 'turno_solicitado', 'sala_quirofano',
         'nombre_cirujano', 'req_insumo', 'tipo_admision', 'estado_solicitud',
-        'procedimientos_paciente'
+        'procedimientos_paciente','diagnostico','procedimientos_extra'
     ];
 
     for (const field of requiredFields) {
