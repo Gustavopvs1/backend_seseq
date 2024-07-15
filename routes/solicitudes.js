@@ -265,42 +265,170 @@ router.put('/programar/:id', (req, res) => {
 });
 
 // Suspender una solicitud
-router.put('/suspender/:id', (req, res) => {
+router.patch('/suspender/:id', (req, res) => {
     const id = req.params.id;
-    db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ? WHERE id_solicitud = ?', ['Suspendida', id], (err, result) => {
+
+    // Obtener el folio actual y las reprogramaciones
+    db.query('SELECT folio, reprogramaciones FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
         if (err) {
-            console.error('Error suspendiendo solicitud:', err);
-            res.status(500).json({ error: 'Error suspendiendo solicitud' });
+            console.error('Error obteniendo el folio y las reprogramaciones:', err);
+            return res.status(500).json({ error: 'Error obteniendo el folio y las reprogramaciones' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Solicitud no encontrada' });
+        }
+
+        let folio = results[0].folio;
+        let reprogramaciones = results[0].reprogramaciones || 0;
+
+        // Si el folio tiene un sufijo de reprogramación, reemplazarlo con "-S"
+        if (/-R\d+$/.test(folio)) {
+            folio = folio.replace(/-R\d+$/, '-S');
         } else {
+            // Si no tiene un sufijo de reprogramación, simplemente añadir "-S"
+            folio += '-S';
+        }
+
+        // Actualizar el estado y el folio en la base de datos
+        db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ?, folio = ? WHERE id_solicitud = ?', ['Suspendida', folio, id], (err, result) => {
+            if (err) {
+                console.error('Error suspendiendo solicitud:', err);
+                return res.status(500).json({ error: 'Error suspendiendo solicitud' });
+            }
+
             res.setHeader('Content-Type', 'application/json');
             res.json({ message: 'Solicitud suspendida exitosamente' });
+        });
+    });
+});
+
+
+
+// Reprogramar una solicitud suspendida
+router.patch('/reprogramar/:id', (req, res) => {
+    const id = req.params.id;
+
+    // Obtener el folio actual y el contador de reprogramaciones
+    db.query('SELECT folio, reprogramaciones FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
+        if (err) {
+            console.error('Error obteniendo el folio y las reprogramaciones:', err);
+            return res.status(500).json({ error: 'Error obteniendo el folio y las reprogramaciones' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Solicitud no encontrada' });
+        }
+
+        let folio = results[0].folio;
+        let reprogramaciones = results[0].reprogramaciones || 0;
+
+        // Remover '-S' si está presente y añadir 'R' seguido del contador de reprogramaciones
+        folio = folio.replace(/-S$/, '');
+        reprogramaciones += 1;
+        folio += `-R${reprogramaciones}`;
+
+        // Actualizar el estado, el folio y el contador de reprogramaciones en la base de datos
+        const updatedData = {
+            estado_solicitud: 'Pre-programada',
+            fecha_programada: null,
+            hora_asignada: null,
+            turno: null,
+            nombre_anestesiologo: null,
+            folio: folio,
+            reprogramaciones: reprogramaciones
+        };
+
+        db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
+            if (err) {
+                console.error('Error reprogramando solicitud:', err);
+                return res.status(500).json({ error: 'Error reprogramando solicitud' });
+            }
+
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud reprogramada exitosamente.' });
+        });
+    });
+});
+
+
+// Endpoint para actualizar una solicitud y agregar procedimientos extra
+router.patch('/enfermeria/:id', (req, res) => {
+    const id = req.params.id;
+    const { nuevos_procedimientos_extra, ...updatedFields } = req.body;
+
+    // Validar que los procedimientos extra sean un array
+    if (!Array.isArray(nuevos_procedimientos_extra)) {
+        return res.status(400).json({ error: 'Los procedimientos extra deben ser un array' });
+    }
+
+    // Convertir procedimientos extra a JSON
+    const procedimientosExtraJSON = JSON.stringify(nuevos_procedimientos_extra);
+
+    // Añadir procedimientos extra y actualizar el estado de la solicitud
+    updatedFields.nuevos_procedimientos_extra = procedimientosExtraJSON;
+    updatedFields.estado_solicitud = 'Realizada';
+
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
+        if (err) {
+            console.error('Error actualizando solicitud:', err);
+            res.status(500).json({ error: 'Error actualizando solicitud', details: err.message });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud actualizada exitosamente a Realizada.' });
         }
     });
 });
 
-// Reprogramar una solicitud suspendida
-router.put('/reprogramar/:id', (req, res) => {
+
+// Actualizar solicitud programada
+router.patch('/actualizar/:id', (req, res) => {
     const id = req.params.id;
-    
-    
-    const updatedData = {
-        estado_solicitud: 'Pre-programada',
-        fecha_programada: null,
-        hora_asignada: null,
-        turno: null,
-        nombre_anestesiologo: null
-    };
-    
-    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedData, id], (err, result) => {
+    const updatedFields = req.body;
+
+    // Obtener el folio actual y las reprogramaciones
+    db.query('SELECT folio, reprogramaciones FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
         if (err) {
-            console.error('Error reprogramando solicitud:', err);
-            res.status(500).json({ error: 'Error reprogramando solicitud' });
-        } else {
-            res.setHeader('Content-Type', 'application/json');
-            res.json({ message: 'Solicitud reprogramada exitosamente.' });
+            console.error('Error obteniendo el folio y las reprogramaciones:', err);
+            res.status(500).json({ error: 'Error obteniendo el folio y las reprogramaciones' });
+            return;
         }
+
+        if (results.length === 0) {
+            res.status(404).json({ error: 'Solicitud no encontrada' });
+            return;
+        }
+
+        let folio = results[0].folio;
+        let reprogramaciones = results[0].reprogramaciones || 0;
+
+        // Si el folio tiene un sufijo de reprogramación, incrementar el contador de reprogramaciones
+        if (/-R\d+$/.test(folio)) {
+            reprogramaciones += 1;
+            folio = folio.replace(/-R\d+$/, `-R${reprogramaciones}`);
+        } else {
+            // Si no tiene un sufijo de reprogramación, añadir "-R1"
+            folio += '-R1';
+            reprogramaciones = 1; // Reiniciar el contador de reprogramaciones
+        }
+
+        // Agregar el folio actualizado y el contador de reprogramaciones a los campos a actualizar
+        updatedFields.folio = folio;
+        updatedFields.reprogramaciones = reprogramaciones;
+
+        // Actualizar la solicitud en la base de datos
+        db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
+            if (err) {
+                console.error('Error actualizando solicitud:', err);
+                res.status(500).json({ error: 'Error actualizando solicitud' });
+            } else {
+                res.setHeader('Content-Type', 'application/json');
+                res.json({ message: 'Solicitud actualizada exitosamente.' });
+            }
+        });
     });
 });
+
 
 // Eliminar una solicitud de cirugía
 router.delete('/:id', (req, res) => {
