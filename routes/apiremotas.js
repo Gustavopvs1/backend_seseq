@@ -35,15 +35,16 @@ FROM
   vw_Medicos
 WHERE 
   Puesto IN (
-    'ENFERMERA ESPECIALISTA "A"',
-    'ENFERMERA ESPECIALISTA "B"',
-    'ENFERMERA ESPECIALISTA "C"',
-    'ENFERMERA GENERAL TECNICA',
-    'ENFERMERA GENERAL TITULADA "A"',
-    'ENFERMERA GENERAL TITULADA "B"',
-    'ENFERMERA GENERAL TITULADA "C"',
-    'ENFERMERA JEFE DE SERVICIO',
-    'ENFERMERA PASANTE "A"'
+    'MEDICO ESPECIALISTA "A"',
+    'MEDICO ESPECIALISTA "B"',
+    'MEDICO ESPECIALISTA "C"',
+    'MEDICO GENERAL "A"',
+    'MEDICO GENERAL "B"',
+    'MEDICO GENERAL "C"',
+    'MEDICO RESIDENTE 1ER GRADO',
+    'MEDICO RESIDENTE 2DO GRADO',
+    'MEDICO RESIDENTE 3ER GRADO',
+    'MEDICO RESIDENTE 4TO GRADO'
   ) 
 AND Status = 'Activo'
         `;
@@ -69,7 +70,7 @@ router.get('/cirujanos/activos', async (req, res) => {
 
         const query = `
 SELECT 
-  CONCAT(Nombre, '', Paterno, '', Materno) AS nombre_completo
+  CONCAT(Nombre, Paterno, Materno) AS nombre_completo
 FROM 
   vw_Medicos
 WHERE 
