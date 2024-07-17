@@ -133,6 +133,42 @@ router.get('/procedimientos', (req, res) => {
     });
 });
 
+// Endpoint para obtener los motivos de suspensión
+router.get('/motivos-suspension', (req, res) => {
+    const category = req.query.category || '';
+
+    // Definir las columnas válidas
+    const validColumns = [
+        'paciente',
+        'administrativas',
+        'apoyo_clinico',
+        'team_quirurgico',
+        'infraestructura',
+        'tiempo_quirurgico',
+        'emergencias',
+        'gremiales'
+    ];
+
+    // Verificar que la categoría solicitada sea válida
+    if (!validColumns.includes(category)) {
+        return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    // Construir la consulta para obtener los motivos de la categoría seleccionada
+    const sqlQuery = `SELECT ${category} AS motivo FROM motivo_suspension WHERE ${category} IS NOT NULL`;
+
+    // Ejecutar la consulta
+    db.query(sqlQuery, (err, results) => {
+        if (err) {
+            console.error('Error fetching motivos de suspensión:', err);
+            res.status(500).json({ error: 'Error fetching motivos de suspensión' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
 
 // Obtener una solicitud por ID
 router.get('/:id', (req, res) => {
@@ -267,6 +303,7 @@ router.put('/programar/:id', (req, res) => {
 // Suspender una solicitud
 router.patch('/suspender/:id', (req, res) => {
     const id = req.params.id;
+    const { suspendReason, suspendDetail } = req.body;
 
     // Obtener el folio actual y las reprogramaciones
     db.query('SELECT folio, reprogramaciones FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
@@ -290,8 +327,9 @@ router.patch('/suspender/:id', (req, res) => {
             folio += '-S';
         }
 
-        // Actualizar el estado y el folio en la base de datos
-        db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ?, folio = ? WHERE id_solicitud = ?', ['Suspendida', folio, id], (err, result) => {
+        // Actualizar el estado, el folio y el motivo de suspensión en la base de datos
+        const motivoSuspension = `${suspendReason} - ${suspendDetail}`;
+        db.query('UPDATE solicitudes_cirugia SET estado_solicitud = ?, folio = ?, motivo_suspension = ? WHERE id_solicitud = ?', ['Suspendida', folio, motivoSuspension, id], (err, result) => {
             if (err) {
                 console.error('Error suspendiendo solicitud:', err);
                 return res.status(500).json({ error: 'Error suspendiendo solicitud' });
@@ -302,6 +340,7 @@ router.patch('/suspender/:id', (req, res) => {
         });
     });
 });
+
 
 
 
