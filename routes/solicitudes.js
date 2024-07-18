@@ -30,6 +30,7 @@ router.get('/', (req, res) => {
                 solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
                 solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
                 solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento);
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -185,6 +186,7 @@ router.get('/:id', (req, res) => {
             solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
             solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
             solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento);
             res.setHeader('Content-Type', 'application/json');
             res.json(solicitud);
         }
