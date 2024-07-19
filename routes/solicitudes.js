@@ -343,7 +343,60 @@ router.patch('/suspender/:id', (req, res) => {
     });
 });
 
+// Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
+router.patch('/bitacoraenf/:id', (req, res) => {
+    const id = req.params.id;
+    const {
+        nuevos_procedimientos_extra,
+        hora_entrada,
+        hora_incision,
+        hora_cierre,
+        hora_salida,
+        egreso,
+        enf_quirurgica,
+        enf_circulante
+    } = req.body;
 
+    // Validar que nuevos_procedimientos_extra sea un array
+    if (!Array.isArray(nuevos_procedimientos_extra)) {
+        return res.status(400).json({ error: 'Los procedimientos extra deben ser un array' });
+    }
+
+    // Convertir procedimientos extra a JSON
+    const procedimientosExtraJSON = JSON.stringify(nuevos_procedimientos_extra);
+
+    // Crear el objeto con los campos a actualizar
+    const updatedFields = {
+        nuevos_procedimientos_extra: procedimientosExtraJSON,
+        hora_entrada,
+        hora_incision,
+        hora_cierre,
+        hora_salida,
+        egreso,
+        enf_quirurgica,
+        enf_circulante
+    };
+
+    // Actualizar los campos en la tabla solicitudes_cirugia
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
+        if (err) {
+            console.error('Error updating bitacoraenf:', err);
+            return res.status(500).json({ error: 'Error updating bitacoraenf', details: err.message });
+        }
+
+        // Actualizar el estado de la solicitud en la tabla solicitudes_cirugia
+        const updateSolicitudQuery = 'UPDATE solicitudes_cirugia SET estado_solicitud = ? WHERE id_solicitud = ?';
+        db.query(updateSolicitudQuery, ['Realizada', id], (err, result) => {
+            if (err) {
+                console.error('Error updating solicitudes_cirugia:', err);
+                return res.status(500).json({ error: 'Error updating solicitudes_cirugia', details: err.message });
+            }
+
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a Realizada.' });
+        });
+    });
+});
 
 
 // Reprogramar una solicitud suspendida
@@ -392,32 +445,30 @@ router.patch('/reprogramar/:id', (req, res) => {
     });
 });
 
-
-// Endpoint para actualizar una solicitud y agregar procedimientos extra
-router.patch('/enfermeria/:id', (req, res) => {
+router.patch('/anestesia/:id', (req, res) => {
     const id = req.params.id;
-    const { nuevos_procedimientos_extra, ...updatedFields } = req.body;
+    const {
+        hi_anestesia,
+        tipo_anestesia,
+        ht_anestesia
+    } = req.body;
 
-    // Validar que los procedimientos extra sean un array
-    if (!Array.isArray(nuevos_procedimientos_extra)) {
-        return res.status(400).json({ error: 'Los procedimientos extra deben ser un array' });
-    }
+    // Crear el objeto con los campos a actualizar
+    const updatedFields = {
+        hi_anestesia,
+        tipo_anestesia,
+        ht_anestesia
+    };
 
-    // Convertir procedimientos extra a JSON
-    const procedimientosExtraJSON = JSON.stringify(nuevos_procedimientos_extra);
-
-    // Añadir procedimientos extra y actualizar el estado de la solicitud
-    updatedFields.nuevos_procedimientos_extra = procedimientosExtraJSON;
-    updatedFields.estado_solicitud = 'Realizada';
-
+    // Actualizar los campos en la tabla solicitudes_cirugia
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
         if (err) {
-            console.error('Error actualizando solicitud:', err);
-            res.status(500).json({ error: 'Error actualizando solicitud', details: err.message });
-        } else {
-            res.setHeader('Content-Type', 'application/json');
-            res.json({ message: 'Solicitud actualizada exitosamente a Realizada.' });
+            console.error('Error updating solicitudes_cirugia:', err);
+            return res.status(500).json({ error: 'Error updating solicitudes_cirugia', details: err.message });
         }
+
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ message: 'Campos actualizados exitosamente en solicitudes_cirugia.' });
     });
 });
 
