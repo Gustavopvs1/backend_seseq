@@ -94,6 +94,25 @@ router.get('/suspendidas', (req, res) => {
     });
 });
 
+router.get('/realizadas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => {
+        if (err) {
+            console.error('Error fetching realizadas:', err);
+            res.status(500).json({ error: 'Error fetching realizadas' });
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
+
 // Obtener solicitudes pre-programadas
 router.get('/preprogramadas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => {
@@ -347,56 +366,49 @@ router.patch('/suspender/:id', (req, res) => {
 router.patch('/bitacoraenf/:id', (req, res) => {
     const id = req.params.id;
     const {
-        nuevos_procedimientos_extra,
-        hora_entrada,
-        hora_incision,
-        hora_cierre,
-        hora_salida,
-        egreso,
-        enf_quirurgica,
-        enf_circulante
+      nuevos_procedimientos_extra,
+      hora_entrada,
+      hora_incision,
+      hora_cierre,
+      hora_salida,
+      egreso,
+      enf_quirurgica,
+      enf_circulante,
+      hi_anestesia,
+      tipo_anestesia,
+      ht_anestesia
     } = req.body;
-
-    // Validar que nuevos_procedimientos_extra sea un array
-    if (!Array.isArray(nuevos_procedimientos_extra)) {
-        return res.status(400).json({ error: 'Los procedimientos extra deben ser un array' });
-    }
-
-    // Convertir procedimientos extra a JSON
-    const procedimientosExtraJSON = JSON.stringify(nuevos_procedimientos_extra);
-
-    // Crear el objeto con los campos a actualizar
+    
+    // Convertimos tipo_anestesia a una cadena separada por comas
+    const tipo_anestesia_str = Array.isArray(tipo_anestesia) ? tipo_anestesia.join(',') : tipo_anestesia;
+  
     const updatedFields = {
-        nuevos_procedimientos_extra: procedimientosExtraJSON,
-        hora_entrada,
-        hora_incision,
-        hora_cierre,
-        hora_salida,
-        egreso,
-        enf_quirurgica,
-        enf_circulante
+      nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
+      hora_entrada,
+      hora_incision,
+      hora_cierre,
+      hora_salida,
+      egreso,
+      enf_quirurgica,
+      enf_circulante,
+      hi_anestesia,
+      tipo_anestesia: tipo_anestesia_str,
+      ht_anestesia,
+      estado_solicitud: 'Realizada' // Actualizamos el estado junto con los otros campos
     };
-
+  
     // Actualizar los campos en la tabla solicitudes_cirugia
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
-        if (err) {
-            console.error('Error updating bitacoraenf:', err);
-            return res.status(500).json({ error: 'Error updating bitacoraenf', details: err.message });
-        }
-
-        // Actualizar el estado de la solicitud en la tabla solicitudes_cirugia
-        const updateSolicitudQuery = 'UPDATE solicitudes_cirugia SET estado_solicitud = ? WHERE id_solicitud = ?';
-        db.query(updateSolicitudQuery, ['Realizada', id], (err, result) => {
-            if (err) {
-                console.error('Error updating solicitudes_cirugia:', err);
-                return res.status(500).json({ error: 'Error updating solicitudes_cirugia', details: err.message });
-            }
-
-            res.setHeader('Content-Type', 'application/json');
-            res.json({ message: 'Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a Realizada.' });
-        });
+      if (err) {
+        console.error('Error updating bitacoraenf:', err);
+        return res.status(500).json({ error: 'Error updating bitacoraenf', details: err.message });
+      }
+  
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ message: 'Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a Realizada.' });
     });
-});
+  });
+  
 
 
 // Reprogramar una solicitud suspendida
