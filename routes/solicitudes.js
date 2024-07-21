@@ -94,6 +94,25 @@ router.get('/suspendidas', (req, res) => {
     });
 });
 
+
+router.get('/realizadas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => {
+        if (err) {
+            console.error('Error fetching realizadas:', err);
+            res.status(500).json({ error: 'Error fetching realizadas' });
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
 // Obtener solicitudes pre-programadas
 router.get('/preprogramadas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => {

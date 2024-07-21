@@ -5,7 +5,7 @@ const path = require('path');
 const importExcelToDB = async () => {
   try {
     // Usa la ruta absoluta directamente
-    const workbook = xlsx.readFile('C:/Users/rober/Downloads/PROCEDIMIENTO_202402.xlsx');
+    const workbook = xlsx.readFile('C:/Users/USUARIO/Documents/UTEQ/Ing/Estadias/Documentos/Excel/PROCEDIMIENTO_202402.xlsx');
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);

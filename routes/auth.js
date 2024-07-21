@@ -62,14 +62,14 @@ router.post('/login', (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ message: 'Correo electrónico o contraseña inválidos' });
         }
 
         const user = results[0];
         const isPasswordValid = await bcrypt.compare(password, user.contraseña);
 
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ message: 'Correo electrónico o contraseña inválidos' });
         }
 
         const token = jwt.sign({ id: user.id_usuario, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
