@@ -265,6 +265,63 @@ router.post('/', (req, res) => {
     });
 });
 
+
+// Crear una nueva solicitud de cirugía
+router.post('/urgencias', (req, res) => {
+    const solicitud = req.body;
+
+    // Validar campos requeridos
+    const requiredFields = [
+        'fecha_solicitud', 'clave_esp', 'nombre_especialidad', 'ap_paterno',
+        'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
+        'turno_solicitado', 'sala_quirofano', 'nombre_cirujano', 'req_insumo', 'estado_solicitud',
+        'procedimientos_paciente', 'diagnostico', 'nuevos_procedimientos_extra',
+        'hora_entrada', 'hora_incision', 'hora_cierre', 'hora_salida', 'egreso',
+        'enf_quirurgica', 'enf_circulante', 'hi_anestesia', 'tipo_anestesia', 'ht_anestesia'
+    ];
+
+    const missingFields = requiredFields.filter(field => !solicitud[field]);
+
+    if (missingFields.length > 0) {
+        return res.status(400).json({ error: `Los siguientes campos son requeridos: ${missingFields.join(', ')}` });
+    }
+
+    // Convertir `nuevos_procedimientos_extra` y `tipo_anestesia` a JSON
+    solicitud.nuevos_procedimientos_extra = JSON.stringify(solicitud.nuevos_procedimientos_extra);
+    solicitud.tipo_anestesia = JSON.stringify(solicitud.tipo_anestesia);
+
+    console.log('Datos a insertar en la base de datos:', solicitud);
+
+    db.query('INSERT INTO solicitudes_cirugia SET ?', solicitud, (err, result) => {
+        if (err) {
+            console.error('Error creating solicitud de urgencia:', err);
+            res.status(500).json({ error: 'Error creating solicitud de urgencia', details: err.message });
+        } else {
+            const id_solicitud = result.insertId;
+
+            // Generar el folio
+            const removeDashes = (str) => str.replace(/-/g, '');
+            const formattedFechaSolicitud = removeDashes(solicitud.fecha_solicitud.split(' ')[0]);
+            const formattedFechaSolicitada = removeDashes(solicitud.fecha_solicitada.split(' ')[0]);
+            const folio = `${formattedFechaSolicitud}-${solicitud.clave_esp}-${formattedFechaSolicitada}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}`;
+
+            console.log('Folio generado:', folio);
+
+            // Actualizar el folio en la base de datos
+            db.query('UPDATE solicitudes_cirugia SET folio = ? WHERE id_solicitud = ?', [folio, id_solicitud], (updateErr) => {
+                if (updateErr) {
+                    console.error('Error updating folio:', updateErr);
+                    res.status(500).json({ error: 'Error updating folio', details: updateErr.message });
+                } else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json({ message: 'Solicitud creada exitosamente.', id: id_solicitud, folio: folio });
+                }
+            });
+        }
+    });
+});
+
+
 // Actualizar una solicitud de cirugía
 router.put('/:id', (req, res) => {
     const id = req.params.id;
