@@ -593,20 +593,6 @@ router.patch('/actualizar/:id', (req, res) => {
         });
     });
 });
-
-
-// Eliminar una solicitud de cirugía
-router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    db.query('DELETE FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, result) => {
-        if (err) {
-            console.error('Error deleting solicitud:', err);
-            res.status(500).json({ error: 'Error deleting solicitud', details: err.message });
-        } else {
-            res.setHeader('Content-Type', 'application/json');
-            res.json({ message: 'Solicitud eliminada exitosamente.' });
-        }
-    });
-});
+  
 
 module.exports = router;

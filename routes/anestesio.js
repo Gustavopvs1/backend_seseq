@@ -89,4 +89,33 @@ router.get('/anestesiologo', (req, res) => {
 });
 
 
+router.delete('/anestesiologos/:id', (req, res) => {
+    const { id } = req.params;
+  
+    db.connect((err, connection) => {
+      if (err) {
+        console.error('Error connecting to the database:', err);
+        return res.status(500).json({ message: 'Error al obtener conexión' });
+      }
+  
+      connection.query('DELETE FROM anestesiologos WHERE id_anestesiologo = ?', [id], (error, result) => {
+        if (error) {
+          console.error('Error deleting anesthesiologist:', error);
+          return res.status(500).json({ message: 'Error al eliminar el anestesiólogo' });
+        }
+  
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: 'Anestesiólogo no encontrado' });
+        }
+  
+        res.status(200).json({ message: 'Anestesiólogo eliminado con éxito' });
+  
+        // No cierres la conexión aquí
+        // connection.end();
+      });
+    });
+  });
+  
+  
+
 module.exports = router;
