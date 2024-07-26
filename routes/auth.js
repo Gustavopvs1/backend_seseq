@@ -4,21 +4,25 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../database/db'); // Importar la conexión a la base de datos
 
-const JWT_SECRET = 'your_jwt_secret';
+const JWT_SECRET = 'thSgeHLKR0RwSc1wCQPE7ggEFLgCnOaxzIYnuUYJN40=';
 
 // Middleware de autenticación
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) return res.sendStatus(401);
+    if (!token) return res.status(401).json({ message: 'No token provided.' });
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) {
+            return res.status(403).json({ message: 'Token expired. Please log in again.' });
+        }
         req.user = user;
         next();
     });
 };
+
+
 
 // Registrar un usuario
 router.post('/register', async (req, res) => {
@@ -73,6 +77,7 @@ router.post('/login', (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id_usuario, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+        console.log('Generated token:', token);
         res.json({ message: 'Login successful.', token });
     });
 });
