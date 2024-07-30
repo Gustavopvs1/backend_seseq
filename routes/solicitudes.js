@@ -1,133 +1,137 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../database/db'); // Importar la conexión a la base de datos
+const express = require('express'); // Importa el módulo express para crear el router y manejar las rutas
+const router = express.Router(); // Crea un enrutador de express para manejar las rutas relacionadas con las solicitudes de cirugía
+const db = require('../database/db'); // Importa la conexión a la base de datos desde un archivo de configuración
 
+// Función para formatear fechas en formato YYYY-MM-DD
 const formatDateForDisplay = (date) => {
-    if (!date) return null; // Devolver null si la fecha no es válida
-    const d = new Date(date);
-    const year = d.getUTCFullYear();
-    const month = ('0' + (d.getUTCMonth() + 1)).slice(-2);
-    const day = ('0' + d.getUTCDate()).slice(-2);
-    const formattedDate = `${year}-${month}-${day}`;
-    return formattedDate;
+    if (!date) return null; // Retorna null si la fecha es inválida o no está presente
+    const d = new Date(date); // Crea un objeto Date a partir de la fecha proporcionada
+    const year = d.getUTCFullYear(); // Obtiene el año en formato UTC
+    const month = ('0' + (d.getUTCMonth() + 1)).slice(-2); // Obtiene el mes en formato UTC, asegurando que siempre tenga dos dígitos
+    const day = ('0' + d.getUTCDate()).slice(-2); // Obtiene el día en formato UTC, asegurando que siempre tenga dos dígitos
+    const formattedDate = `${year}-${month}-${day}`; // Formatea la fecha en formato YYYY-MM-DD
+    return formattedDate; // Retorna la fecha formateada
 };
 
-
-// Función para eliminar guiones de las fechas
+// Función para eliminar guiones de una cadena de fecha
 const removeDashes = (dateString) => {
-    return dateString.replace(/-/g, '');
+    return dateString.replace(/-/g, ''); // Reemplaza todos los guiones con una cadena vacía
 };
 
-// Obtener todas las solicitudes de cirugía
+// Ruta para obtener todas las solicitudes de cirugía
 router.get('/', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia', (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia', (err, results) => { // Ejecuta una consulta para obtener todas las solicitudes de cirugía
         if (err) {
-            console.error('Error fetching solicitudes:', err);
-            res.status(500).json({ error: 'Error fetching solicitudes' });
+            console.error('Error fetching solicitudes:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching solicitudes' }); // Envía una respuesta de error al cliente
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
-                solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
+                solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento); // Formatea la fecha de nacimiento
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
 
+
+// Ruta para obtener solicitudes de cirugía con estado "Pendiente"
 router.get('/pendientes', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Pendiente"
         if (err) {
-            console.error('Error fetching solicitud by status:', err);
-            res.status(500).json({ error: 'Error fetching solicitud by status' });
+            console.error('Error fetching solicitud by status:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching solicitud by status' }); // Envía una respuesta de error al cliente
         } else if (results.length === 0) {
-            res.status(404).json({ error: 'No hay solicitudes pendientes' });
+            res.status(404).json({ error: 'No hay solicitudes pendientes' }); // Envía una respuesta si no se encuentran solicitudes pendientes
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Programada"
 router.get('/programadas', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Programada"', (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Programada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Programada"
         if (err) {
-            console.error('Error fetching programadas:', err);
-            res.status(500).json({ error: 'Error fetching programadas' });
+            console.error('Error fetching programadas:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching programadas' }); // Envía una respuesta de error al cliente
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Suspendida"
 router.get('/suspendidas', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Suspendida"', (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Suspendida"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Suspendida"
         if (err) {
-            console.error('Error fetching suspendidas:', err);
-            res.status(500).json({ error: 'Error fetching suspendidas' });
+            console.error('Error fetching suspendidas:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching suspendidas' }); // Envía una respuesta de error al cliente
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Realizada"
 router.get('/realizadas', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Realizada"
         if (err) {
-            console.error('Error fetching realizadas:', err);
-            res.status(500).json({ error: 'Error fetching realizadas' });
+            console.error('Error fetching realizadas:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching realizadas' }); // Envía una respuesta de error al cliente
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
 
-
-// Obtener solicitudes pre-programadas
+// Ruta para obtener solicitudes de cirugía con estado "Pre-programada"
 router.get('/preprogramadas', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Pre-programada"
         if (err) {
-            console.error('Error fetching preprogramadas:', err);
-            res.status(500).json({ error: 'Error fetching preprogramadas' });
+            console.error('Error fetching preprogramadas:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching preprogramadas' }); // Envía una respuesta de error al cliente
         } else {
             // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
             });
-            res.setHeader('Content-Type', 'application/json');
-            res.json(results);
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
         }
     });
 });
