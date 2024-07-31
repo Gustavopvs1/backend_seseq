@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 require('dotenv').config(); // Cargar las variables de entorno
 const authRoutes = require('./routes/auth');
 const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de solicitudes
-const apiRemotas = require('./routes/apiremotas');
 const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
 const db = require('./database/db'); // Importar la conexión a la base de datos local
@@ -27,8 +26,6 @@ app.use('/api/solicitudes', solicitudesRoutes); // Añadir ruta de solicitudes
 // Ruta base para las rutas de eventos
 app.use('/api', eventsRoutes);
 
-// Usar las rutas definidas en apiremotas.js
-app.use('/api', apiRemotas);
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
