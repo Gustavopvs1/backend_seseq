@@ -1,4 +1,4 @@
-const express = require('express');
+/* const express = require('express');
 const router = express.Router();
 const connectToDb = require('../database/dbremote'); // Asegúrate de que la ruta es correcta
 
@@ -154,3 +154,4 @@ AND CONCAT(TRIM(Nombre), ' ', TRIM(Paterno), ' ', TRIM(Materno)) LIKE ?
 });
 
 module.exports = router;
+ */
