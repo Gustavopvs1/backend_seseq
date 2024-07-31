@@ -1,16 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config(); // Cargar las variables de entorno
+require('dotenv').config();
 const authRoutes = require('./routes/auth');
-const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de solicitudes
+const solicitudesRoutes = require('./routes/solicitudes');
 const apiRemotas = require('./routes/apiremotas');
 const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
-const db = require('./database/db'); // Importar la conexión a la base de datos local
-const dbRemote = require('./database/dbremote'); // Importar la conexión a la base de datos remota
 const anestesioRoutes = require('./routes/anestesio');
-
+const usersRoutes = require('./routes/users'); // Importar las rutas de usuarios
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -18,21 +16,13 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Ruta base para las rutas de autenticación
+// Rutas
 app.use('/api/auth', authRoutes);
-
-// Ruta base para las rutas de solicitudes
-app.use('/api/solicitudes', solicitudesRoutes); // Añadir ruta de solicitudes
-
-// Ruta base para las rutas de eventos
+app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
-
-// Usar las rutas definidas en apiremotas.js
 app.use('/api', apiRemotas);
-
-// Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
-
+app.use('/api', usersRoutes); // Añadir la ruta de usuarios
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
