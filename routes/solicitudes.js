@@ -294,7 +294,7 @@ router.post('/urgencias', (req, res) => {
         'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
         'turno_solicitado', 'sala_quirofano', 'nombre_cirujano', 'req_insumo', 'estado_solicitud',
         'procedimientos_paciente', 'diagnostico', 'nuevos_procedimientos_extra',
-        'hora_entrada', 'hora_incision', 'hora_cierre', 'hora_salida', 'egreso',
+        'hora_entrada', 'hora_incision', 'hora_cierre', 'hora_salida', 'egreso', 'nombre_anestesiologo',
         'enf_quirurgica', 'enf_circulante', 'hi_anestesia', 'tipo_anestesia', 'ht_anestesia'
     ];
 

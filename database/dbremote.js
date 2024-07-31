@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+/* const mysql = require('mysql2');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -105,3 +105,4 @@ const connectToDb = async () => {
 };
 
 module.exports = connectToDb;
+ */
