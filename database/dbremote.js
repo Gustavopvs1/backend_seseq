@@ -42,7 +42,7 @@ const connectToDb = async () => {
       port: port
     };
 
-    const [tunnel] = await require('tunnel-ssh')(tunnelOptions, serverOptions, sshOptions, forwardOptions);
+    const tunnel = await require('tunnel-ssh')(sshOptions, forwardOptions, serverOptions, tunnelOptions);
     console.log('SSH tunnel established successfully.');
 
     const dbRemote = mysql.createConnection({
