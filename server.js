@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 4000;
 
 // Configura CORS
 app.use(cors({
-  origin: 'https://hospital-sistemaseseq.onrender.com', // Reemplaza con la URL de tu frontend
+  origin: 'https://quirofanos-50jqtyj38-gustavo-diaz-riveras-projects.vercel.app', // Reemplaza con la URL de tu frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
