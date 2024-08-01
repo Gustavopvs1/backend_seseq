@@ -12,13 +12,7 @@ const anestesioRoutes = require('./routes/anestesio');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Configura CORS
-app.use(cors({
-  origin: 'https://quirofanos-50jqtyj38-gustavo-diaz-riveras-projects.vercel.app', // Reemplaza con la URL de tu frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
-
+app.use(cors());
 app.use(bodyParser.json());
 
 // Ruta base para verificar que el servidor está corriendo
