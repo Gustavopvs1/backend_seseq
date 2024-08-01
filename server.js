@@ -13,7 +13,13 @@ const anestesioRoutes = require('./routes/anestesio');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// Configura CORS
+app.use(cors({
+  origin: 'https://hospital-sistemaseseq.onrender.com', // Reemplaza con la URL de tu frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
 // Ruta base para verificar que el servidor está corriendo
