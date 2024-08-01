@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
     res.send('Backend is running!');
 });
 
+// Ruta para health-check y mantener activo el backend
+app.get('/api/health-check', (req, res) => {
+    res.status(200).send('Backend is active');
+});
+
 // Ruta base para las rutas de autenticación
 app.use('/api/auth', authRoutes);
 
