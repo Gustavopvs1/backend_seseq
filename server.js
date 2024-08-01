@@ -7,7 +7,6 @@ const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de 
 const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
 const db = require('./database/db'); // Importar la conexión a la base de datos local
-const dbRemote = require('./database/dbremote'); // Importar la conexión a la base de datos remota
 const anestesioRoutes = require('./routes/anestesio');
 
 const app = express();
