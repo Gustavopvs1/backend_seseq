@@ -39,6 +39,27 @@ router.get('/', (req, res) => {
 });
 
 
+// Ruta para verificar si ya existe una solicitud con la misma fecha, hora y sala
+router.post('/check', (req, res) => {
+    const { fecha_solicitada, hora_solicitada, sala_quirofano } = req.body;
+
+    const query = `
+        SELECT COUNT(*) as count FROM solicitudes_cirugia 
+        WHERE fecha_solicitada = ? AND hora_solicitada = ? AND sala_quirofano = ?
+    `;
+
+    db.query(query, [fecha_solicitada, hora_solicitada, sala_quirofano], (err, results) => {
+        if (err) {
+            console.error('Error checking solicitudes:', err);
+            return res.status(500).json({ error: 'Error checking solicitudes' });
+        }
+
+        const exists = results[0].count > 0;
+        res.json({ exists }); // Envía true si existe una solicitud, false si no
+    });
+});
+
+
 // Ruta para obtener solicitudes de cirugía con estado "Pendiente"
 router.get('/pendientes', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = ?', ['Pendiente'], (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Pendiente"
