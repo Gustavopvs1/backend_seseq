@@ -1,0 +1,7 @@
+// Sala.js (modelo de datos)
+const Sala = {
+  id: Number,
+  nombre: String,
+  disponible: Boolean, // true si la sala está disponible, false si está deshabilitada
+  // Otros campos que puedas necesitar
+};
