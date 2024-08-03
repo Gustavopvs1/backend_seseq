@@ -40,24 +40,32 @@ router.get('/', (req, res) => {
 
 
 // Ruta para verificar si ya existe una solicitud con la misma fecha, hora y sala
+// Ruta para verificar conflictos
 router.post('/check', (req, res) => {
-    const { fecha_solicitada, hora_solicitada, sala_quirofano } = req.body;
+    const { fecha_solicitada, hora_solicitada, sala_quirofano, tiempo_estimado } = req.body;
 
-    const query = `
-        SELECT COUNT(*) as count FROM solicitudes_cirugia 
-        WHERE fecha_solicitada = ? AND hora_solicitada = ? AND sala_quirofano = ?
-    `;
+    // Convierte la hora y fecha a una marca de tiempo
+    const startTime = new Date(`${fecha_solicitada}T${hora_solicitada}`);
+    const endTime = new Date(startTime.getTime() + tiempo_estimado * 60000); // tiempo_estimado en minutos
 
-    db.query(query, [fecha_solicitada, hora_solicitada, sala_quirofano], (err, results) => {
+    // Consulta para encontrar conflictos de horario
+    db.query(`
+        SELECT * FROM solicitudes_cirugia
+        WHERE sala_quirofano = ? AND fecha_solicitada = ? AND (
+            (hora_solicitada <= ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+            OR
+            (hora_solicitada < ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+        )
+    `, [sala_quirofano, fecha_solicitada, startTime, tiempo_estimado, endTime, endTime, tiempo_estimado, startTime], (err, results) => {
         if (err) {
-            console.error('Error checking solicitudes:', err);
-            return res.status(500).json({ error: 'Error checking solicitudes' });
+            console.error('Error checking for conflicts:', err);
+            res.status(500).json({ error: 'Error checking for conflicts' });
+        } else {
+            res.json({ exists: results.length > 0 });
         }
-
-        const exists = results[0].count > 0;
-        res.json({ exists }); // Envía true si existe una solicitud, false si no
     });
 });
+
 
 
 // Ruta para obtener solicitudes de cirugía con estado "Pendiente"
