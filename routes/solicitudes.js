@@ -470,6 +470,23 @@ router.patch('/suspender/:id', (req, res) => {
     });
 });
 
+router.delete('/delete/:id', async (req, res) => {
+    const { id } = req.params;
+  
+    try {
+      const result = await db.query('DELETE FROM solicitudes_cirugia WHERE id_solicitud = ?', [id]);
+  
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Solicitud no encontrada' });
+      }
+  
+      res.status(200).json({ message: 'Solicitud eliminada exitosamente' });
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      res.status(500).json({ message: 'Error eliminando la solicitud' });
+    }
+  });
+
 // Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
 router.patch('/bitacoraenf/:id', (req, res) => {
     const id = req.params.id;
