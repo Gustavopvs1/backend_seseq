@@ -17,22 +17,32 @@ router.get('/users', (req, res) => {
 
 // Ruta para eliminar un usuario
 router.delete('/users/:id', (req, res) => {
-    const query = 'DELETE FROM usuarios WHERE id_usuario = ?';
-    const userId = req.params.id;
-
-    db.query(query, [userId], (err, result) => {
-        if (err) {
-            console.error('Error deleting user:', err);
-            return res.status(500).json({ message: 'Error deleting user.' });
+    const { id } = req.params;
+  
+    db.connect((err, connection) => {
+      if (err) {
+        console.error('Error connecting to the database:', err);
+        return res.status(500).json({ message: 'Error al obtener conexión' });
+      }
+  
+      connection.query('DELETE FROM usuarios WHERE id_usuario = ?', [id], (error, result) => {
+        if (error) {
+          console.error('Error deleting users:', error);
+          return res.status(500).json({ message: 'Error al eliminar el usuario' });
         }
-
+  
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found.' });
+          return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-
-        res.json({ message: 'User deleted successfully.' });
+  
+        res.status(200).json({ message: 'Usuario eliminado con éxito' });
+  
+        // No cierres la conexión aquí
+        // connection.end();
+      });
     });
-});
+  });
+  
   
 // Ruta para editar un usuario
 router.patch('/users/:id', (req, res) => {
