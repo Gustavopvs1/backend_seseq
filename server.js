@@ -33,7 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
 app.use('/api/users', usersRouter);
-app.use('api/salas', salasRoutes);
+app.use('/api/salas', salasRoutes);
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
