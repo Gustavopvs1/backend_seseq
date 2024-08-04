@@ -78,7 +78,7 @@ router.patch('/users/:id', (req, res) => {
     }
 
     values.push(userId);
-    query += fields.join(', ') + ' WHERE id = ?';
+    query += fields.join(', ') + ' WHERE id_usuario = ?';
 
     console.log('Query:', query); // Debugging line
     console.log('Values:', values); // Debugging line
