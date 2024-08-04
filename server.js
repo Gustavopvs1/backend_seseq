@@ -9,6 +9,7 @@ const eventsRoutes = require('./routes/events');
 const usersRouter = require('./routes/users');
 const db = require('./database/db'); // Importar la conexión a la base de datos local
 const anestesioRoutes = require('./routes/anestesio');
+const salasRoutes = require('./routes/salas')
 const path = require('path');
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
 app.use('/api/users', usersRouter);
+app.use('api/salas', salasRoutes);
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
