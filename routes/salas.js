@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database/db'); // Asegúrate de que esta ruta apunta a tu archivo de conexión de la base de datos
+const db = require('../database/db');
 
 // Obtener todas las salas
 router.get('/salas', (req, res) => {
@@ -16,16 +16,20 @@ router.get('/salas', (req, res) => {
 });
 
 // Actualizar el estado de una sala
-router.put('/salas/:id', async (req, res) => {
+router.put('/salas/:id', (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
 
-    try {
-        await db.query('UPDATE salas_quirofano SET estado = ? WHERE id = ?', [estado, id]);
+    const query = 'UPDATE salas_quirofano SET estado = ? WHERE id = ?';
+    const values = [estado, id];
+
+    db.query(query, values, (err, results) => {
+        if (err) {
+            console.error('Error updating sala state:', err);
+            return res.status(500).json({ message: 'Error updating sala state.' });
+        }
         res.status(200).json({ message: 'Estado de la sala actualizado correctamente' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    });
 });
 
 module.exports = router;
