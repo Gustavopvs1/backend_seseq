@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de solicitudes
 const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
+const usersRouter = require('./routes/users');
 const db = require('./database/db'); // Importar la conexión a la base de datos local
 const anestesioRoutes = require('./routes/anestesio');
 const path = require('path');
