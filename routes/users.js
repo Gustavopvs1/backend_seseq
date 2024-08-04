@@ -35,7 +35,7 @@ router.delete('/users/:id', (req, res) => {
 });
   
 // Ruta para editar un usuario
-router.put('/users/:id', (req, res) => {
+router.patch('/users/:id', (req, res) => {
     const userId = req.params.id;
     const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula } = req.body;
 
