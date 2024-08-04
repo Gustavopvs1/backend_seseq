@@ -4,7 +4,7 @@ const db = require('../database/db');
 
 // Ruta para obtener todos los usuarios
 router.get('/users', (req, res) => {
-    const query = 'SELECT * FROM usuarios';
+    const query = 'SELECT id_usuario as id, nombre, ap_paterno, ap_materno, nivel_usuario, email FROM usuarios';
 
     db.query(query, (err, results) => {
         if (err) {
