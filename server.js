@@ -30,6 +30,7 @@ app.get('/api/health-check', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
+app.use('/api/users', usersRouter);
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
