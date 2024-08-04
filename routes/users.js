@@ -39,7 +39,6 @@ router.put('/users/:id', (req, res) => {
     const userId = req.params.id;
     const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula } = req.body;
 
-    // Construir la consulta de actualización dinámica
     let query = 'UPDATE usuarios SET ';
     let values = [];
     let fields = [];
@@ -79,7 +78,10 @@ router.put('/users/:id', (req, res) => {
     }
 
     values.push(userId);
-    query += fields.join(', ') + ' WHERE id_usuario = ?';
+    query += fields.join(', ') + ' WHERE id = ?';
+
+    console.log('Query:', query); // Debugging line
+    console.log('Values:', values); // Debugging line
 
     db.query(query, values, (err, result) => {
         if (err) {
@@ -94,6 +96,5 @@ router.put('/users/:id', (req, res) => {
         res.json({ message: 'User updated successfully.' });
     });
 });
-  
 
 module.exports = router;
