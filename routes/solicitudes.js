@@ -474,7 +474,7 @@ router.delete('/delete/:id', async (req, res) => {
     const { id } = req.params;
   
     try {
-      const result = await db.query('DELETE FROM solicitudes_cirugia WHERE id = ?', [id]);
+      const result = await db.query('DELETE FROM solicitudes_cirugia WHERE id_solicitud = ?', [id]);
   
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Solicitud no encontrada' });
