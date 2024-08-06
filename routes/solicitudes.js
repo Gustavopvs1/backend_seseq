@@ -146,6 +146,42 @@ router.get('/realizadas', (req, res) => {
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Realizada" en el mes actual
+router.get('/realizadasMes', (req, res) => {
+    // Obtener la fecha de inicio y fin del mes actual
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    // Formatear las fechas para MySQL
+    const formattedFirstDay = firstDayOfMonth.toISOString().slice(0, 10);
+    const formattedLastDay = lastDayOfMonth.toISOString().slice(0, 10);
+
+    const query = `
+        SELECT * FROM solicitudes_cirugia 
+        WHERE estado_solicitud = "Realizada"
+        AND fecha_solicitada BETWEEN ? AND ?`;
+
+    // Ejecutar la consulta
+    db.query(query, [formattedFirstDay, formattedLastDay], (err, results) => {
+        if (err) {
+            console.error('Error fetching realizadasMes:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching realizadasMes' }); // Envía una respuesta de error al cliente
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
+            });
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
+        }
+    });
+});
+
+
+
 // Ruta para obtener solicitudes de cirugía con estado "Pre-programada"
 router.get('/preprogramadas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Pre-programada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Pre-programada"
