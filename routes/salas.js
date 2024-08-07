@@ -20,8 +20,14 @@ router.put('/salas/:id', (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
 
-    const query = 'UPDATE salas_quirofano SET estado = ?, ultima_actualizacion = CURRENT_TIMESTAMP WHERE id = ?';
-    const values = [estado, id];
+    // Solo actualiza ultima_actualizacion si el estado es 'false' (apagado)
+    const query = estado
+        ? 'UPDATE salas_quirofano SET estado = ? WHERE id = ?'
+        : 'UPDATE salas_quirofano SET estado = ?, ultima_actualizacion = CURRENT_TIMESTAMP WHERE id = ?';
+    
+    const values = estado
+        ? [estado, id]
+        : [estado, id];
 
     db.query(query, values, (err, results) => {
         if (err) {
@@ -31,5 +37,6 @@ router.put('/salas/:id', (req, res) => {
         res.status(200).json({ message: 'Estado de la sala actualizado correctamente' });
     });
 });
+
 
 module.exports = router;
