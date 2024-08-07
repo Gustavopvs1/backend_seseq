@@ -535,13 +535,7 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       egreso,
       enf_quirurgica,
       enf_circulante,
-      hi_anestesia,
-      tipo_anestesia,
-      ht_anestesia
     } = req.body;
-    
-    // Convertimos tipo_anestesia a una cadena separada por comas
-    const tipo_anestesia_str = Array.isArray(tipo_anestesia) ? tipo_anestesia.join(',') : tipo_anestesia;
   
     const updatedFields = {
       nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
@@ -552,9 +546,6 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       egreso,
       enf_quirurgica,
       enf_circulante,
-      hi_anestesia,
-      tipo_anestesia: tipo_anestesia_str,
-      ht_anestesia,
       estado_solicitud: 'Realizada' // Actualizamos el estado junto con los otros campos
     };
   
@@ -567,6 +558,38 @@ router.patch('/bitacoraenf/:id', (req, res) => {
   
       res.setHeader('Content-Type', 'application/json');
       res.json({ message: 'Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a Realizada.' });
+    });
+  });
+
+
+  // Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
+router.patch('/bitacoranes/:id', (req, res) => {
+    const id = req.params.id;
+    const {
+      hi_anestesia,
+      tipo_anestesia,
+      ht_anestesia
+    } = req.body;
+    
+    // Convertimos tipo_anestesia a una cadena separada por comas
+    const tipo_anestesia_str = Array.isArray(tipo_anestesia) ? tipo_anestesia.join(',') : tipo_anestesia;
+  
+    const updatedFields = {
+      hi_anestesia,
+      tipo_anestesia: tipo_anestesia_str,
+      ht_anestesia,
+
+    };
+  
+    // Actualizar los campos en la tabla solicitudes_cirugia
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
+      if (err) {
+        console.error('Error updating bitacoranes:', err);
+        return res.status(500).json({ error: 'Error updating bitacoranes', details: err.message });
+      }
+  
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ message: 'Registro actualizado exitosamente en bitacoranes.' });
     });
   });
   
