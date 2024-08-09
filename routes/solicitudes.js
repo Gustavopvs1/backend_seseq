@@ -127,6 +127,25 @@ router.get('/suspendidas', (req, res) => {
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Suspendida"
+router.get('/reailizadas', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Suspendida"
+        if (err) {
+            console.error('Error fetching reailizadas:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching reailizadas' }); // Envía una respuesta de error al cliente
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
+            });
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
+        }
+    });
+});
+
 // Ruta para obtener solicitudes de cirugía con estado "Realizada"
 router.get('/realizadas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Realizada"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Realizada"
