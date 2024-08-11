@@ -74,9 +74,8 @@ router.patch('/users/:id', (req, res) => {
     }
     if (availableScreens) {
         fields.push('pantallasDisponibles = ?');
-        values.push(JSON.stringify(availableScreens));
+        values.push(availableScreens.join(",")); // Almacena como texto separado por comas
     }
-
     if (fields.length === 0) {
         return res.status(400).json({ message: 'No fields to update.' });
     }
