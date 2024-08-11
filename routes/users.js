@@ -74,7 +74,7 @@ router.patch('/users/:id', (req, res) => {
     }
     if (pantallasDisponibles) {
         fields.push('pantallasDisponibles = ?');
-        values.push(pantallasDisponibles.join(",")); // Almacena como texto separado por comas
+        values.push(pantallasDisponibles); // Ya está como una cadena
     }
     if (fields.length === 0) {
         return res.status(400).json({ message: 'No fields to update.' });
