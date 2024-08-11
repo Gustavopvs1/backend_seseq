@@ -50,6 +50,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Autenticar un usuario
+// Autenticar un usuario
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
 
@@ -72,12 +73,13 @@ router.post('/login', (req, res) => {
         const user = results[0];
         const isPasswordValid = await bcrypt.compare(password, user.contraseña);
 
-
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Correo electrónico o contraseña inválidos' });
         }
 
-        const token = jwt.sign({ id: user.id_usuario, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+        // Include nivel_usuario in the token
+        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario }, JWT_SECRET, { expiresIn: '1h' });
+
         console.log('Generated token:', token);
         res.json({ message: 'Login successful.', token });
     });

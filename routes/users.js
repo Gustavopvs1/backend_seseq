@@ -34,11 +34,10 @@ router.delete('/users/:id', (req, res) => {
     });
 });
 
-  
 // Ruta para editar un usuario
 router.patch('/users/:id', (req, res) => {
     const userId = req.params.id;
-    const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula } = req.body;
+    const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula, availableScreens } = req.body;
 
     let query = 'UPDATE usuarios SET ';
     let values = [];
@@ -66,12 +65,16 @@ router.patch('/users/:id', (req, res) => {
     }
     if (password) {
         const hashedPassword = bcrypt.hashSync(password, 10);
-        fields.push('password = ?');
+        fields.push('contraseña = ?');
         values.push(hashedPassword);
     }
     if (cedula) {
         fields.push('cedula = ?');
         values.push(cedula);
+    }
+    if (availableScreens) {
+        fields.push('pantallasDisponibles = ?');
+        values.push(JSON.stringify(availableScreens));
     }
 
     if (fields.length === 0) {
@@ -95,6 +98,27 @@ router.patch('/users/:id', (req, res) => {
         }
 
         res.json({ message: 'User updated successfully.' });
+    });
+});
+
+// Ruta para obtener pantallas disponibles para un usuario
+router.get('/users/:id/screens', (req, res) => {
+    const userId = req.params.id;
+
+    const query = 'SELECT pantallas_disponibles FROM usuarios WHERE id_usuario = ?';
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching user screens:', err);
+            return res.status(500).json({ message: 'Error fetching user screens.' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const screens = results[0].pantallasDisponibles ? JSON.parse(results[0].pantallasDisponibles) : [];
+        res.json(screens);
     });
 });
 
