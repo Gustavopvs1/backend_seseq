@@ -78,7 +78,7 @@ router.post('/login', (req, res) => {
         }
 
         // Include nivel_usuario in the token
-        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario, pantallasDisponibles: user.pantallasDisponibles }, JWT_SECRET, { expiresIn: '1h' });
 
         console.log('Generated token:', token);
         res.json({ message: 'Login successful.', token });
@@ -87,7 +87,7 @@ router.post('/login', (req, res) => {
 
 // Ruta para obtener información del usuario autenticado
 router.get('/user', authenticateToken, (req, res) => {
-    const query = 'SELECT nombre, ap_paterno, ap_materno, nivel_usuario, email FROM usuarios WHERE id_usuario = ?';
+    const query = 'SELECT nombre, ap_paterno, ap_materno, nivel_usuario, email, pantallasDisponibles FROM usuarios WHERE id_usuario = ?';
 
     db.query(query, [req.user.id], (err, results) => {
         if (err) {
@@ -105,7 +105,8 @@ router.get('/user', authenticateToken, (req, res) => {
             ap_paterno: user.ap_paterno,
             ap_materno: user.ap_materno,
             rol_user: user.nivel_usuario,
-            email: user.email
+            email: user.email,
+            pantallas: user.pantallasDisponibles
         });
     });
 });
