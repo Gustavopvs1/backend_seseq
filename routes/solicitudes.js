@@ -238,6 +238,7 @@ router.get('/geturgencias', (req, res) => {
     });
 });
 
+
 // Endpoint para obtener los procedimientos con búsqueda
 router.get('/procedimientos', (req, res) => {
     const searchQuery = req.query.q || '';
@@ -258,6 +259,28 @@ router.get('/procedimientos', (req, res) => {
         }
     });
 });
+
+// Suponiendo que tienes una tabla con datos de fecha y procedimientos
+router.get('/procedimientos/tendencia', (req, res) => {
+    const sqlQuery = `
+        SELECT fecha, COUNT(*) as cantidad
+        FROM procedimientos
+        GROUP BY fecha
+        ORDER BY fecha`;
+
+    db.query(sqlQuery, (err, results) => {
+        if (err) {
+            console.error('Error fetching trend data:', err);
+            res.status(500).json({ error: 'Error fetching trend data' });
+        } else {
+            // Asegúrate de que el formato de los resultados es adecuado para el gráfico
+            const dates = results.map(row => row.fecha);
+            const proceduresCount = results.map(row => row.cantidad);
+            res.json({ dates, proceduresCount });
+        }
+    });
+});
+
 
 // Endpoint para obtener los motivos de suspensión
 router.get('/motivos-suspension', (req, res) => {
