@@ -40,6 +40,7 @@ router.get('/', (req, res) => {
 
 
 // Ruta para verificar si ya existe una solicitud con la misma fecha, hora y sala
+// Ruta para verificar conflictos
 router.post('/check', (req, res) => {
     const { fecha_solicitada, hora_solicitada, sala_quirofano, tiempo_estimado } = req.body;
 
@@ -47,17 +48,18 @@ router.post('/check', (req, res) => {
     const startTime = new Date(`${fecha_solicitada}T${hora_solicitada}`);
     const endTime = new Date(startTime.getTime() + tiempo_estimado * 60000); // tiempo_estimado en minutos
 
-    // Consulta para encontrar conflictos de horario
+    // Consulta para encontrar conflictos de horario considerando el estado de la sala
     const query = `
-        SELECT * FROM solicitudes_cirugia
-        WHERE sala_quirofano = ? AND fecha_solicitada = ? AND (
-            (hora_solicitada < ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+        SELECT s.* FROM solicitudes_cirugia s
+        JOIN salas_quirofano sa ON s.sala_quirofano = sa.id
+        WHERE sa.estado = true AND s.sala_quirofano = ? AND s.fecha_solicitada = ? AND (
+            (s.hora_solicitada <= ? AND ADDTIME(s.hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
             OR
-            (hora_solicitada < ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+            (s.hora_solicitada < ? AND ADDTIME(s.hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
         )
     `;
 
-    db.query(query, [sala_quirofano, fecha_solicitada, endTime, tiempo_estimado, startTime, startTime, tiempo_estimado, endTime], (err, results) => {
+    db.query(query, [sala_quirofano, fecha_solicitada, startTime, tiempo_estimado, endTime, endTime, tiempo_estimado, startTime], (err, results) => {
         if (err) {
             console.error('Error checking for conflicts:', err);
             res.status(500).json({ error: 'Error checking for conflicts' });
