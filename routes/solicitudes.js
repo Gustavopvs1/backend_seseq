@@ -44,19 +44,36 @@ router.get('/', (req, res) => {
 router.post('/check', (req, res) => {
     const { fecha_solicitada, hora_solicitada, sala_quirofano, tiempo_estimado } = req.body;
 
+    // Validación de campos
+    if (!fecha_solicitada || !hora_solicitada || !sala_quirofano || !tiempo_estimado) {
+        return res.status(400).json({ error: 'Todos los campos son requeridos.' });
+    }
+
     // Convierte la hora y fecha a una marca de tiempo
     const startTime = new Date(`${fecha_solicitada}T${hora_solicitada}`);
-    const endTime = new Date(startTime.getTime() + tiempo_estimado * 60000); // tiempo_estimado en minutos
+    const endTime = new Date(startTime.getTime() + parseInt(tiempo_estimado, 10) * 60000); // tiempo_estimado en minutos
 
-    // Consulta para encontrar conflictos de horario
-    db.query(`
-        SELECT * FROM solicitudes_cirugia
-        WHERE sala_quirofano = ? AND fecha_solicitada = ? AND (
-            (hora_solicitada <= ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+    // Consulta para encontrar conflictos de horario considerando el estado de la sala
+    const query = `
+        SELECT s.* FROM solicitudes_cirugia s
+        JOIN salas_quirofano sa ON s.sala_quirofano = sa.id
+        WHERE sa.estado = true AND s.sala_quirofano = ? AND s.fecha_solicitada = ? AND (
+            (s.hora_solicitada < ? AND ADDTIME(s.hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
             OR
-            (hora_solicitada < ? AND ADDTIME(hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
+            (s.hora_solicitada < ? AND ADDTIME(s.hora_solicitada, CONCAT(?, ' MINUTE')) > ?)
         )
-    `, [sala_quirofano, fecha_solicitada, startTime, tiempo_estimado, endTime, endTime, tiempo_estimado, startTime], (err, results) => {
+    `;
+
+    db.query(query, [
+        sala_quirofano, 
+        fecha_solicitada, 
+        startTime, 
+        tiempo_estimado, 
+        startTime, 
+        endTime, 
+        tiempo_estimado, 
+        endTime
+    ], (err, results) => {
         if (err) {
             console.error('Error checking for conflicts:', err);
             res.status(500).json({ error: 'Error checking for conflicts' });
@@ -65,7 +82,6 @@ router.post('/check', (req, res) => {
         }
     });
 });
-
 
 
 // Ruta para obtener solicitudes de cirugía con estado "Pendiente"
@@ -256,27 +272,6 @@ router.get('/procedimientos', (req, res) => {
         } else {
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
-        }
-    });
-});
-
-// Suponiendo que tienes una tabla con datos de fecha y procedimientos
-router.get('/procedimientos/tendencia', (req, res) => {
-    const sqlQuery = `
-        SELECT fecha, COUNT(*) as cantidad
-        FROM procedimientos
-        GROUP BY fecha
-        ORDER BY fecha`;
-
-    db.query(sqlQuery, (err, results) => {
-        if (err) {
-            console.error('Error fetching trend data:', err);
-            res.status(500).json({ error: 'Error fetching trend data' });
-        } else {
-            // Asegúrate de que el formato de los resultados es adecuado para el gráfico
-            const dates = results.map(row => row.fecha);
-            const proceduresCount = results.map(row => row.cantidad);
-            res.json({ dates, proceduresCount });
         }
     });
 });
