@@ -22,6 +22,11 @@ router.get('/anestesiologos', (req, res) => {
             // Formatear las fechas para visualización
             results.forEach(anestesiologo => {
                 anestesiologo.dia_anestesio = formatDateForDisplay(anestesiologo.dia_anestesio);
+                
+                // Convertir sala_anestesio de cadena de texto a array
+                if (anestesiologo.sala_anestesio) {
+                    anestesiologo.sala_anestesio = anestesiologo.sala_anestesio.split(',');
+                }
             });
             res.setHeader('Content-Type', 'application/json');
             res.json(results);
@@ -65,6 +70,7 @@ router.post('/anestesiologos', (req, res) => {
 
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
+// Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
 router.get('/anestesiologo', (req, res) => {
     const { fecha_programada, turno, sala_quirofano } = req.query;
 
@@ -75,7 +81,7 @@ router.get('/anestesiologo', (req, res) => {
     const query = `
         SELECT nombre
         FROM anestesiologos
-        WHERE dia_anestesio = ? AND turno_anestesio = ? AND sala_anestesio = ?
+        WHERE dia_anestesio = ? AND turno_anestesio = ? AND FIND_IN_SET(?, sala_anestesio) > 0
     `;
 
     db.query(query, [fecha_programada, turno, sala_quirofano], (err, results) => {
@@ -92,6 +98,7 @@ router.get('/anestesiologo', (req, res) => {
         }
     });
 });
+
 
 
 router.delete('/anestesiologos/:id', (req, res) => {
