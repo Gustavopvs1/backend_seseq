@@ -31,11 +31,16 @@ router.get('/anestesiologos', (req, res) => {
 
 // Endpoint para guardar un nuevo anestesiólogo
 router.post('/anestesiologos', (req, res) => {
-    const { nombre, dia_anestesio, turno_anestesio, sala_anestesio, hora_inicio, hora_fin } = req.body;
+    let { nombre, dia_anestesio, turno_anestesio, sala_anestesio, hora_inicio, hora_fin } = req.body;
 
     // Validar campos requeridos
     if (!nombre || !dia_anestesio || !turno_anestesio || !sala_anestesio || !hora_inicio || !hora_fin) {
         return res.status(400).json({ error: 'Todos los campos son requeridos.' });
+    }
+
+    // Verificar si sala_anestesio es un array. Si es así, unirlo en una cadena de texto.
+    if (Array.isArray(sala_anestesio)) {
+        sala_anestesio = sala_anestesio.join(','); // Convertir array a string separada por comas
     }
 
     const newAnestesio = {
