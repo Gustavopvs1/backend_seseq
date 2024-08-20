@@ -78,7 +78,7 @@ router.post('/login', (req, res) => {
         }
 
         // Include nivel_usuario in the token
-        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario, pantallasDisponibles: user.pantallasDisponibles }, JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario, pantallasDisponibles: user.pantallasDisponibles }, JWT_SECRET, { expiresIn: '2h' });
 
         console.log('Generated token:', token);
         res.json({ message: 'Login successful.', token });
