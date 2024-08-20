@@ -68,6 +68,38 @@ router.post('/anestesiologos', (req, res) => {
     });
 });
 
+
+// Actualizar un anestesiólogo
+router.patch('/anestesiologos/:id', (req, res) => {
+    const id = req.params.id;
+    const updatedFields = req.body;
+
+    if (!id) {
+        return res.status(400).json({ error: 'ID del anestesiólogo no proporcionado' });
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+        return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+    }
+
+    // Convertir sala_anestesio de array a string si es necesario
+    if (updatedFields.sala_anestesio && Array.isArray(updatedFields.sala_anestesio)) {
+        updatedFields.sala_anestesio = updatedFields.sala_anestesio.join(',');
+    }
+
+    db.query('UPDATE anestesiologos SET ? WHERE id_anestesiologo = ?', [updatedFields, id], (err, result) => {
+        if (err) {
+            console.error('Error actualizando anestesiólogo:', err);
+            res.status(500).json({ error: 'Error actualizando anestesiólogo' });
+        } else if (result.affectedRows === 0) {
+            res.status(404).json({ error: 'Anestesiólogo no encontrado' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Anestesiólogo actualizado exitosamente.' });
+        }
+    });
+});
+
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
