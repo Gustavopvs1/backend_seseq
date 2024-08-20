@@ -82,12 +82,22 @@ router.patch('/anestesiologos/:id', (req, res) => {
         return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
     }
 
-    // Convertir sala_anestesio de array a string si es necesario
-    if (updatedFields.sala_anestesio && Array.isArray(updatedFields.sala_anestesio)) {
-        updatedFields.sala_anestesio = updatedFields.sala_anestesio.join(',');
+    // Validar campos antes de actualizar
+    const allowedFields = ['nombre', 'dia_anestesio', 'turno_anestesio', 'sala_anestesio', 'hora_inicio', 'hora_fin'];
+    const filteredFields = {};
+
+    for (const key in updatedFields) {
+        if (allowedFields.includes(key)) {
+            filteredFields[key] = updatedFields[key];
+        }
     }
 
-    db.query('UPDATE anestesiologos SET ? WHERE id_anestesiologo = ?', [updatedFields, id], (err, result) => {
+    // Convertir sala_anestesio de array a string si es necesario
+    if (filteredFields.sala_anestesio && Array.isArray(filteredFields.sala_anestesio)) {
+        filteredFields.sala_anestesio = filteredFields.sala_anestesio.join(',');
+    }
+
+    db.query('UPDATE anestesiologos SET ? WHERE id_anestesiologo = ?', [filteredFields, id], (err, result) => {
         if (err) {
             console.error('Error actualizando anestesiólogo:', err);
             res.status(500).json({ error: 'Error actualizando anestesiólogo' });
@@ -99,6 +109,7 @@ router.patch('/anestesiologos/:id', (req, res) => {
         }
     });
 });
+
 
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
 // Nuevo endpoint para obtener el anestesiólogo asignado según la fecha, turno y sala
