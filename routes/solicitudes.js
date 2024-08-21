@@ -1,6 +1,8 @@
 const express = require('express'); // Importa el módulo express para crear el router y manejar las rutas
 const router = express.Router(); // Crea un enrutador de express para manejar las rutas relacionadas con las solicitudes de cirugía
 const db = require('../database/db'); // Importa la conexión a la base de datos desde un archivo de configuración
+const authenticateToken = require('../middleware/authenticateToken'); // Importar el middleware de autenticación
+
 
 // Función para formatear fechas en formato YYYY-MM-DD
 const formatDateForDisplay = (date) => {
@@ -337,8 +339,9 @@ router.get('/:id', (req, res) => {
 });
 
 // Crear una nueva solicitud de cirugía
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, (req, res) => {
     const solicitud = req.body;
+    const usuario_creador = req.user.id; // Asumiendo que el ID del usuario está en req.user.id
 
     // Validar campos requeridos
     const requiredFields = [
@@ -346,7 +349,7 @@ router.post('/', (req, res) => {
         'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
         'hora_solicitada', 'tiempo_estimado', 'turno_solicitado', 'sala_quirofano',
         'nombre_cirujano', 'req_insumo', 'tipo_admision', 'estado_solicitud',
-        'procedimientos_paciente','diagnostico','procedimientos_extra'
+        'procedimientos_paciente', 'diagnostico', 'procedimientos_extra'
     ];
 
     for (const field of requiredFields) {
@@ -354,6 +357,9 @@ router.post('/', (req, res) => {
             return res.status(400).json({ error: `El campo ${field} es requerido.` });
         }
     }
+
+    // Incluir el ID del usuario en los datos a insertar
+    solicitud.usuario_creador = usuario_creador;
 
     console.log('Datos a insertar en la base de datos:', solicitud);
 
