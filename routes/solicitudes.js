@@ -276,15 +276,16 @@ router.get('/procedimientos', (req, res) => {
     });
 });
 
+      
 // Endpoint para obtener los diagnosticos con búsqueda
 router.get('/diagnosticos', (req, res) => {
     const searchQuery = req.query.q || '';
-
+  
     // Construir la consulta para buscar diagnosticos que coincidan con el término de búsqueda
     const sqlQuery = `
         SELECT * FROM diagnosticos_cie10
         WHERE nombre_diagnostico LIKE ?`;
-
+  
     // El comodín '%' se usa para buscar cualquier ocurrencia del término de búsqueda
     db.query(sqlQuery, [`%${searchQuery}%`], (err, results) => {
         if (err) {
@@ -295,7 +296,7 @@ router.get('/diagnosticos', (req, res) => {
             res.json(results);
         }
     });
-});
+  });
 
 
 // Endpoint para obtener los motivos de suspensión
