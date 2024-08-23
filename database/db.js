@@ -44,4 +44,16 @@ setInterval(() => {
     }
 }, 300000); // Ejecutar cada 5 minutos
 
-module.exports = db;
+function ensureConnection(callback) {
+    if (db && db.state === 'authenticated') {
+        callback();
+    } else {
+        console.log('Database connection lost, reconnecting...');
+        connectDatabase(); // Reconectar
+        db.once('connect', () => {
+            callback(); // Ejecutar el callback cuando la reconexión esté lista
+        });
+    }
+}
+
+module.exports = { db, ensureConnection };
