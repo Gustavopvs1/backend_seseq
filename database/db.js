@@ -3,7 +3,7 @@ require('dotenv').config();
 
 let db;
 
-function handleDisconnect() {
+function connectDatabase() {
     db = mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -15,7 +15,7 @@ function handleDisconnect() {
     db.connect(err => {
         if (err) {
             console.error('Error connecting to the database:', err);
-            setTimeout(handleDisconnect, 2000); // Intentar reconectar después de 2 segundos
+            setTimeout(connectDatabase, 2000); // Intentar reconectar después de 2 segundos
         } else {
             console.log('Connected to the database.');
         }
@@ -24,22 +24,24 @@ function handleDisconnect() {
     db.on('error', err => {
         console.error('Database error:', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            handleDisconnect(); // Reconectar si la conexión se pierde
+            console.log('Attempting to reconnect...');
+            connectDatabase(); // Reconectar si la conexión se pierde
         } else {
             throw err; // Manejar otros errores
         }
     });
 }
 
-handleDisconnect();
+// Iniciar la conexión
+connectDatabase();
 
 // Keep-alive query
 setInterval(() => {
-    if (db.state === 'authenticated') {
-        db.query('SELECT 1', (err, results) => {
+    if (db && db.state === 'authenticated') {
+        db.query('SELECT 1', (err) => {
             if (err) console.error('Error keeping the connection alive:', err);
         });
     }
-}, 50000);
+}, 300000); // Ejecutar cada 5 minutos
 
 module.exports = db;
