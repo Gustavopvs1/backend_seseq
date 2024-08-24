@@ -37,7 +37,7 @@ router.delete('/users/:id', (req, res) => {
 // Ruta para editar un usuario
 router.patch('/users/:id', (req, res) => {
     const userId = req.params.id;
-    const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula, pantallasDisponibles } = req.body;
+    const { nombre, ap_paterno, ap_materno, nivel_usuario, email, password, cedula, pantallasDisponibles, especialidad  } = req.body;
 
     let query = 'UPDATE usuarios SET ';
     let values = [];
@@ -75,6 +75,10 @@ router.patch('/users/:id', (req, res) => {
     if (pantallasDisponibles) {
         fields.push('pantallasDisponibles = ?');
         values.push(pantallasDisponibles); // Ya está como una cadena
+    }
+    if (especialidad) {
+        fields.push('especialidad = ?');
+        values.push(especialidad);
     }
     if (fields.length === 0) {
         return res.status(400).json({ message: 'No fields to update.' });
