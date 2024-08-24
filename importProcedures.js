@@ -16,6 +16,7 @@ const importExcelToDB = async () => {
       user: 'root',
       password: '12345',
       database: 'seseq',
+
     });
 
     // Itera sobre los datos y realiza la inserción en la base de datos
