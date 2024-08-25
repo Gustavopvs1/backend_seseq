@@ -497,10 +497,10 @@ router.put('/preprogramar/:id', (req, res) => {
 // Endpoint para actualizar una solicitud pre-programada a programada
 router.put('/programar/:id', (req, res) => {
     const id = req.params.id;
-    const { fecha_programada, hora_asignada, turno, nombre_anestesiologo } = req.body;
+    const { fecha_programada, hora_asignada, turno, sala_quirofano, nombre_anestesiologo } = req.body;
 
     // Validar campos requeridos
-    if (!fecha_programada || !hora_asignada || !turno || !nombre_anestesiologo) {
+    if (!fecha_programada || !hora_asignada || !turno || !sala_quirofano || !nombre_anestesiologo) {
         return res.status(400).json({ error: 'Todos los campos son requeridos para programar la cita.' });
     }
 
@@ -509,6 +509,7 @@ router.put('/programar/:id', (req, res) => {
         fecha_programada,
         hora_asignada,
         turno,
+        sala_quirofano,
         nombre_anestesiologo,
         estado_solicitud: 'Programada'
     };
