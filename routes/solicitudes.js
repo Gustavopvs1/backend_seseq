@@ -13,10 +13,12 @@ const formatDateForDisplay = (date) => {
     return formattedDate; // Retorna la fecha formateada
 };
 
-// Función para eliminar guiones de una cadena de fecha
+// Función para convertir la fecha de yyyy-mm-dd a ddmmaaaa y eliminar guiones
 const removeDashes = (dateString) => {
-    return dateString.replace(/-/g, ''); // Reemplaza todos los guiones con una cadena vacía
+    const [year, month, day] = dateString.split('-'); // Divide la fecha en partes
+    return `${day}${month}${year}`; // Reorganiza en formato ddmmaaaa y elimina guiones
 };
+
 
 // Ruta para obtener todas las solicitudes de cirugía
 router.get('/', (req, res) => {
