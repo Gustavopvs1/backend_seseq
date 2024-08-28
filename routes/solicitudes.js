@@ -361,8 +361,21 @@ router.get('/:id', (req, res) => {
 });
 
 // Crear una nueva solicitud de cirugía
+// Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
     const solicitud = req.body;
+
+    // Convertir campos específicos a mayúsculas
+    const camposAMayusculas = [
+        'nombre_paciente', 'ap_paterno', 'ap_materno', 'nombre_cirujano',
+        'no_expediente', 'curp', 'procedimientos_paciente', 'diagnostico'
+    ];
+
+    camposAMayusculas.forEach(campo => {
+        if (solicitud[campo]) {
+            solicitud[campo] = solicitud[campo].toUpperCase();
+        }
+    });
 
     // Validar campos requeridos
     const requiredFields = [
@@ -408,6 +421,7 @@ router.post('/', (req, res) => {
         }
     });
 });
+
 
 
 // Crear una nueva solicitud de cirugía
