@@ -611,6 +611,7 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       egreso,
       enf_quirurgica,
       enf_circulante,
+      comentarios,
     } = req.body;
   
     const updatedFields = {
@@ -622,6 +623,7 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       egreso,
       enf_quirurgica,
       enf_circulante,
+      comentarios,
       estado_solicitud: 'Realizada' // Actualizamos el estado junto con los otros campos
     };
   
