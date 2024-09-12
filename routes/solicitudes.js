@@ -431,7 +431,7 @@ router.post('/urgencias', (req, res) => {
     // Validar campos requeridos
     const requiredFields = [
         'fecha_solicitud', 'clave_esp', 'nombre_especialidad', 'ap_paterno',
-        'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
+        'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_programada',
         'turno_solicitado', 'sala_quirofano', 'nombre_cirujano', 'req_insumo', 'estado_solicitud',
         'procedimientos_paciente', 'diagnostico', 'nuevos_procedimientos_extra',
         'hora_entrada', 'hora_incision', 'hora_cierre', 'hora_salida', 'egreso', 'nombre_anestesiologo',
@@ -460,7 +460,7 @@ router.post('/urgencias', (req, res) => {
             // Generar el folio
             const removeDashes = (str) => str.replace(/-/g, '');
             const formattedFechaSolicitud = removeDashes(solicitud.fecha_solicitud.split(' ')[0]);
-            const formattedFechaSolicitada = removeDashes(solicitud.fecha_solicitada.split(' ')[0]);
+            const formattedFechaSolicitada = removeDashes(solicitud.fecha_programada.split(' ')[0]);
             const folio = `${formattedFechaSolicitud}-${solicitud.clave_esp}-${formattedFechaSolicitada}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}`;
 
             console.log('Folio generado:', folio);
