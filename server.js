@@ -30,6 +30,14 @@ const credentials = {
   ca: ca
 };
 
+// Middleware para redirigir HTTP a HTTPS
+app.use((req, res, next) => {
+    if (!req.secure) {
+        return res.redirect(['https://', req.get('Host'), req.url].join(''));
+    }
+    next();
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -70,12 +78,4 @@ httpServer.listen(PORT, () => {
 
 httpsServer.listen(HTTPS_PORT, () => {
     console.log(`HTTPS Server running on port ${HTTPS_PORT}`);
-});
-
-// Middleware para redirigir HTTP a HTTPS
-app.use((req, res, next) => {
-    if (!req.secure) {
-        return res.redirect(['https://', req.get('Host'), req.url].join(''));
-    }
-    next();
 });
