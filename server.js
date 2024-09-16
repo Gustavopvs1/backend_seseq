@@ -2,26 +2,18 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
-const fs = require('fs');
-const https = require('https');
-const path = require('path');
 const authRoutes = require('./routes/auth');
-const solicitudesRoutes = require('./routes/solicitudes');
+const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de solicitudes
+const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
 const usersRouter = require('./routes/users');
+const db = require('./database/db'); // Importar la conexión a la base de datos local
 const anestesioRoutes = require('./routes/anestesio');
-const salasRoutes = require('./routes/salas');
-const db = require('./database/db');
+const salasRoutes = require('./routes/salas')
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-
-// Cargar certificados SSL
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/gestionquirofanoseseq.org/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/gestionquirofanoseseq.org/cert.pem', 'utf8');
-const ca = fs.readFileSync('/etc/letsencrypt/live/gestionquirofanoseseq.org/chain.pem', 'utf8');
-
-const credentials = { key: privateKey, cert: certificate, ca: ca };
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -36,23 +28,24 @@ app.get('/api/health-check', (req, res) => {
     res.status(200).send('Backend is active');
 });
 
-// Rutas
+// Ruta base para las rutas de autenticación
 app.use('/api/auth', authRoutes);
 app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/salas', salasRoutes);
+
+// Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
 
 // Servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'build'))); // O 'dist' dependiendo de tu herramienta de construcción
 
-// Redirigir todas las rutas al archivo index.html
+// Redirigir todas las rutas al archivo index
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'index.html')); // O 'dist' si es aplicable
 });
 
-// Crear servidor HTTPS
-https.createServer(credentials, app).listen(PORT, () => {
-    console.log(`HTTPS Server running on port ${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
