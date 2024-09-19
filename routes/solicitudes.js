@@ -435,7 +435,7 @@ router.post('/urgencias', (req, res) => {
         'turno_solicitado', 'sala_quirofano', 'nombre_cirujano', 'req_insumo', 'estado_solicitud',
         'procedimientos_paciente', 'diagnostico', 'nuevos_procedimientos_extra',
         'hora_entrada', 'hora_incision', 'hora_cierre', 'hora_salida', 'egreso', 'nombre_anestesiologo',
-        'enf_quirurgica', 'enf_circulante', 'hi_anestesia', 'tipo_anestesia', 'ht_anestesia'
+        'enf_quirurgica', 'enf_circulante'
     ];
 
     const missingFields = requiredFields.filter(field => !solicitud[field]);
