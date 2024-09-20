@@ -821,4 +821,32 @@ router.patch('/actualizarevaluacion/:id', (req, res) => {
     });
 });
 
+// Actualizar solicitud programada
+router.patch('/editarrealizadas/:id', (req, res) => {
+    const id = req.params.id;
+    const updatedFields = req.body;
+
+    if (!id) {
+        return res.status(400).json({ error: 'ID de solicitud no proporcionado' });
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+        return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+    }
+
+    // Realizar la actualización de los campos permitidos
+    db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
+        if (err) {
+            console.error('Error actualizando solicitud:', err);
+            res.status(500).json({ error: 'Error al actualizar la solicitud.' });
+        } else if (result.affectedRows === 0) {
+            res.status(404).json({ error: 'Solicitud no encontrada.' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json({ message: 'Solicitud actualizada exitosamente.' });
+        }
+    });
+});
+
+
 module.exports = router;
