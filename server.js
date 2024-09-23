@@ -10,6 +10,7 @@ const usersRouter = require('./routes/users');
 const db = require('./database/db'); // Importar la conexión a la base de datos local
 const anestesioRoutes = require('./routes/anestesio');
 const salasRoutes = require('./routes/salas')
+const personalRoutes = require('./routes/personal'); // Importar rutas de personal
 const path = require('path');
 
 const app = express();
@@ -37,6 +38,8 @@ app.use('/api/salas', salasRoutes);
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);
+// Usar las rutas de personal
+app.use('/api/personal', personalRoutes);
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'build'))); // O 'dist' dependiendo de tu herramienta de construcción

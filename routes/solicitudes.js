@@ -278,6 +278,28 @@ router.get('/procedimientos', (req, res) => {
     });
 });
 
+// Endpoint para obtener los procedimientos con búsqueda
+router.get('/personal', (req, res) => {
+    const searchQuery = req.query.q || '';
+
+    // Construir la consulta para buscar procedimientos que coincidan con el término de búsqueda
+    const sqlQuery = `
+        SELECT * FROM personal
+        WHERE nombre_completo LIKE ?`;
+
+    // El comodín '%' se usa para buscar cualquier ocurrencia del término de búsqueda
+    db.query(sqlQuery, [`%${searchQuery}%`], (err, results) => {
+        if (err) {
+            console.error('Error fetching personal:', err);
+            res.status(500).json({ error: 'Error fetching personal' });
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
+        }
+    });
+});
+
+
       
 // Endpoint para obtener los diagnosticos con búsqueda
 router.get('/diagnosticos', (req, res) => {
@@ -461,7 +483,7 @@ router.post('/urgencias', (req, res) => {
             const removeDashes = (str) => str.replace(/-/g, '');
             const formattedFechaSolicitud = removeDashes(solicitud.fecha_solicitud.split(' ')[0]);
             const formattedFechaSolicitada = removeDashes(solicitud.fecha_programada.split(' ')[0]);
-            const folio = `${formattedFechaSolicitud}-${solicitud.clave_esp}-${formattedFechaSolicitada}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}`;
+            const folio = `${formattedFechaSolicitud}-${solicitud.clave_esp}-${formattedFechaSolicitada}-${solicitud.req_insumo.charAt(0)}-${String(id_solicitud).padStart(5, '0')}-U`;
 
             console.log('Folio generado:', folio);
 
