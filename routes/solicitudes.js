@@ -627,8 +627,8 @@ router.patch('/bitacoraenf/:id', (req, res) => {
     const {
       nuevos_procedimientos_extra,
       hora_entrada,
-      hora_incision,
-      hora_cierre,
+      nombre_cirujano,
+      nombre_anestesiologo,
       hora_salida,
       egreso,
       enf_quirurgica,
@@ -639,8 +639,8 @@ router.patch('/bitacoraenf/:id', (req, res) => {
     const updatedFields = {
       nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
       hora_entrada,
-      hora_incision,
-      hora_cierre,
+      nombre_cirujano,
+      nombre_anestesiologo,
       hora_salida,
       egreso,
       enf_quirurgica,
