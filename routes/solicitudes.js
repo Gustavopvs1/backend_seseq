@@ -629,12 +629,19 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       nombre_cirujano,
       nombre_anestesiologo,
       hora_salida,
+      hora_incision,
+      hora_cierre,
       egreso,
       enf_quirurgica,
       enf_circulante,
       comentarios,
     } = req.body;
   
+    // Establecer valores por defecto si están vacíos
+    const defaultHora = '00:00:00'; // Valor por defecto que quieres usar
+    const horaIncisionValue = hora_incision || defaultHora;
+    const horaCierreValue = hora_cierre || defaultHora;
+
     const updatedFields = {
       nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
       hora_entrada,
@@ -642,6 +649,8 @@ router.patch('/bitacoraenf/:id', (req, res) => {
       nombre_anestesiologo,
       hora_salida,
       egreso,
+      hora_incision: horaIncisionValue,
+      hora_cierre: horaCierreValue,
       enf_quirurgica,
       enf_circulante,
       comentarios,
