@@ -865,8 +865,9 @@ router.patch('/editarrealizadas/:id', (req, res) => {
 
     // Verificar y corregir el campo nuevos_procedimientos_extra si está vacío
     if (updatedFields.nuevos_procedimientos_extra === '') {
-        updatedFields.nuevos_procedimientos_extra = null; // Cambiar a NULL si está vacío
+        updatedFields.nuevos_procedimientos_extra = '[]'; // JSON vacío
     }
+    
 
     // Realizar la actualización de los campos permitidos
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
