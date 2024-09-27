@@ -851,7 +851,6 @@ router.patch('/actualizarevaluacion/:id', (req, res) => {
     });
 });
 
-// Actualizar solicitud programada
 router.patch('/editarrealizadas/:id', (req, res) => {
     const id = req.params.id;
     const updatedFields = req.body;
@@ -862,6 +861,11 @@ router.patch('/editarrealizadas/:id', (req, res) => {
 
     if (Object.keys(updatedFields).length === 0) {
         return res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+    }
+
+    // Verificar y corregir el campo nuevos_procedimientos_extra si está vacío
+    if (updatedFields.nuevos_procedimientos_extra === '') {
+        updatedFields.nuevos_procedimientos_extra = null; // Cambiar a NULL si está vacío
     }
 
     // Realizar la actualización de los campos permitidos
