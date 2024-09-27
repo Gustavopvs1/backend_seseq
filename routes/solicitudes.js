@@ -865,7 +865,7 @@ router.patch('/editarrealizadas/:id', (req, res) => {
 
     // Verificar y corregir el campo nuevos_procedimientos_extra si está vacío
     if (updatedFields.nuevos_procedimientos_extra === '') {
-        updatedFields.nuevos_procedimientos_extra = '[]'; // JSON vacío
+        updatedFields.nuevos_procedimientos_extra = '[ "" ]'; // JSON vacío
     }
     
 
