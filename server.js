@@ -7,6 +7,7 @@ const solicitudesRoutes = require('./routes/solicitudes'); // Importar rutas de 
 const programacionRoutes = require('./routes/programacion');
 const eventsRoutes = require('./routes/events');
 const usersRouter = require('./routes/users');
+const pdfRoutes = require('./routes/pdf')
 const db = require('./database/db'); // Importar la conexión a la base de datos local
 const anestesioRoutes = require('./routes/anestesio');
 const salasRoutes = require('./routes/salas')
@@ -40,6 +41,8 @@ app.use('/api/salas', salasRoutes);
 app.use('/api/anestesio', anestesioRoutes);
 // Usar las rutas de personal
 app.use('/api/personal', personalRoutes);
+
+app.use('/api/pdf', pdfRoutes);
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'build'))); // O 'dist' dependiendo de tu herramienta de construcción
