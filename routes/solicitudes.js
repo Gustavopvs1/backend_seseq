@@ -638,6 +638,7 @@ router.put('/delete/:id', (req, res) => {
     });
 });
 
+
 router.patch('/bitacoraenf/:id', (req, res) => {
     const id = req.params.id;
     const {
