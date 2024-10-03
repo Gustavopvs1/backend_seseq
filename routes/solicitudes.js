@@ -126,6 +126,25 @@ router.get('/programadas', (req, res) => {
     });
 });
 
+// Ruta para obtener solicitudes de cirugía con estado "Programada"
+router.get('/editables', (req, res) => {
+    db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Editable"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Programada"
+        if (err) {
+            console.error('Error fetching editables:', err); // Muestra un error en la consola si ocurre un problema con la consulta
+            res.status(500).json({ error: 'Error fetching editables' }); // Envía una respuesta de error al cliente
+        } else {
+            // Formatear las fechas para visualización
+            results.forEach(solicitud => {
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
+            });
+            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
+            res.json(results); // Envía los resultados de la consulta como respuesta
+        }
+    });
+});
+
 // Ruta para obtener solicitudes de cirugía con estado "Suspendida"
 router.get('/suspendidas', (req, res) => {
     db.query('SELECT * FROM solicitudes_cirugia WHERE estado_solicitud = "Suspendida"', (err, results) => { // Ejecuta una consulta para obtener solicitudes con estado "Suspendida"
@@ -619,55 +638,61 @@ router.put('/delete/:id', (req, res) => {
     });
 });
 
-
-// Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
 router.patch('/bitacoraenf/:id', (req, res) => {
     const id = req.params.id;
     const {
-      nuevos_procedimientos_extra,
-      hora_entrada,
-      nombre_cirujano,
-      nombre_anestesiologo,
-      hora_salida,
-      hora_incision,
-      hora_cierre,
-      egreso,
-      enf_quirurgica,
-      enf_circulante,
-      comentarios,
+        nuevos_procedimientos_extra,
+        hora_entrada,
+        nombre_cirujano,
+        nombre_anestesiologo,
+        hora_salida,
+        hora_incision,
+        hora_cierre,
+        egreso,
+        sala_quirofano,
+        enf_quirurgica,
+        enf_circulante,
+        comentarios,
     } = req.body;
-  
-    // Establecer valores por defecto si están vacíos
-    const defaultHora = '00:00:00'; // Valor por defecto que quieres usar
-    const horaIncisionValue = hora_incision || defaultHora;
-    const horaCierreValue = hora_cierre || defaultHora;
 
+
+    // Validar si todos los campos requeridos están completos
+    const allFieldsPresent = hora_entrada && sala_quirofano && nombre_cirujano && nombre_anestesiologo && hora_incision && hora_cierre &&
+        hora_salida && egreso && enf_quirurgica && enf_circulante;
+
+    // Asignar el estado en función de si todos los campos están presentes
+    const estadoSolicitud = allFieldsPresent ? 'Realizada' : 'Editable';
+
+    // Actualizar los campos, incluyendo el estado
     const updatedFields = {
-      nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
-      hora_entrada,
-      nombre_cirujano,
-      nombre_anestesiologo,
-      hora_salida,
-      egreso,
-      hora_incision: horaIncisionValue,
-      hora_cierre: horaCierreValue,
-      enf_quirurgica,
-      enf_circulante,
-      comentarios,
-      estado_solicitud: 'Realizada' // Actualizamos el estado junto con los otros campos
+        nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
+        hora_entrada,
+        nombre_cirujano,
+        nombre_anestesiologo,
+        hora_salida,
+        sala_quirofano,
+        egreso,
+        hora_incision,
+        hora_cierre,
+        enf_quirurgica,
+        enf_circulante,
+        comentarios,
+        estado_solicitud: estadoSolicitud // Asignar el estado calculado
     };
-  
-    // Actualizar los campos en la tabla solicitudes_cirugia
+
+    // Realizar la actualización en la base de datos
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
-      if (err) {
-        console.error('Error updating bitacoraenf:', err);
-        return res.status(500).json({ error: 'Error updating bitacoraenf', details: err.message });
-      }
-  
-      res.setHeader('Content-Type', 'application/json');
-      res.json({ message: 'Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a Realizada.' });
+        if (err) {
+            console.error('Error updating bitacoraenf:', err);
+            return res.status(500).json({ error: 'Error updating bitacoraenf', details: err.message });
+        }
+
+        res.setHeader('Content-Type', 'application/json');
+        res.json({
+            message: `Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a ${estadoSolicitud}.`
+        });
     });
-  });
+});
 
 
   // Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
