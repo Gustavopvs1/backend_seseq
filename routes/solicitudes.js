@@ -654,7 +654,7 @@ router.patch('/bitacoraenf/:id', (req, res) => {
         enf_quirurgica,
         enf_circulante,
         comentarios,
-        ultimo_editor, // Nuevo campo para el último editor
+        ultimo_editor,
     } = req.body;
 
     // Validar si todos los campos requeridos están completos
@@ -669,21 +669,21 @@ router.patch('/bitacoraenf/:id', (req, res) => {
 
     // Actualizar los campos, incluyendo el estado, el nuevo timestamp y el último editor
     const updatedFields = {
-        nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
-        hora_entrada,
-        nombre_cirujano,
-        nombre_anestesiologo,
-        hora_salida,
-        sala_quirofano,
-        egreso,
-        hora_incision,
-        hora_cierre,
-        enf_quirurgica,
-        enf_circulante,
-        comentarios,
+        nuevos_procedimientos_extra: nuevos_procedimientos_extra ? JSON.stringify(nuevos_procedimientos_extra) : null,
+        hora_entrada: hora_entrada || null,
+        nombre_cirujano: nombre_cirujano || null,
+        nombre_anestesiologo: nombre_anestesiologo || null,
+        hora_salida: hora_salida || null,
+        sala_quirofano: sala_quirofano || null,
+        egreso: egreso || null,
+        hora_incision: hora_incision || null,
+        hora_cierre: hora_cierre || null,
+        enf_quirurgica: enf_quirurgica || null,
+        enf_circulante: enf_circulante || null,
+        comentarios: comentarios || null,
         estado_solicitud: estadoSolicitud,
         timestamp_no_editable: timestamp_no_editable,
-        ultimo_editor: ultimo_editor, // Guardar el nombre del último editor
+        ultimo_editor: ultimo_editor || null, // Asegurarse de que se guarde incluso si es null
     };
 
     // Realizar la actualización en la base de datos
@@ -899,7 +899,11 @@ router.patch('/editarrealizadas/:id', (req, res) => {
     if (updatedFields.nuevos_procedimientos_extra === '') {
         updatedFields.nuevos_procedimientos_extra = '[ "" ]'; // JSON vacío
     }
-    
+
+    // Eliminar el campo 'timestamp_no_editable' para que no se actualice
+    if ('timestamp_no_editable' in updatedFields) {
+        delete updatedFields.timestamp_no_editable;
+    }
 
     // Realizar la actualización de los campos permitidos
     db.query('UPDATE solicitudes_cirugia SET ? WHERE id_solicitud = ?', [updatedFields, id], (err, result) => {
@@ -914,6 +918,7 @@ router.patch('/editarrealizadas/:id', (req, res) => {
         }
     });
 });
+
 
 
 module.exports = router;
