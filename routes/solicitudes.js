@@ -654,8 +654,8 @@ router.patch('/bitacoraenf/:id', (req, res) => {
         enf_quirurgica,
         enf_circulante,
         comentarios,
+        ultimo_editor, // Nuevo campo para el último editor
     } = req.body;
-
 
     // Validar si todos los campos requeridos están completos
     const allFieldsPresent = hora_entrada && sala_quirofano && nombre_cirujano && nombre_anestesiologo && hora_incision && hora_cierre &&
@@ -664,7 +664,10 @@ router.patch('/bitacoraenf/:id', (req, res) => {
     // Asignar el estado en función de si todos los campos están presentes
     const estadoSolicitud = allFieldsPresent ? 'Realizada' : 'Editable';
 
-    // Actualizar los campos, incluyendo el estado
+    // Crear un timestamp para cuando la solicitud se marca como Realizada
+    const timestamp_no_editable = allFieldsPresent ? new Date() : null;
+
+    // Actualizar los campos, incluyendo el estado, el nuevo timestamp y el último editor
     const updatedFields = {
         nuevos_procedimientos_extra: JSON.stringify(nuevos_procedimientos_extra),
         hora_entrada,
@@ -678,7 +681,9 @@ router.patch('/bitacoraenf/:id', (req, res) => {
         enf_quirurgica,
         enf_circulante,
         comentarios,
-        estado_solicitud: estadoSolicitud // Asignar el estado calculado
+        estado_solicitud: estadoSolicitud,
+        timestamp_no_editable: timestamp_no_editable,
+        ultimo_editor: ultimo_editor, // Guardar el nombre del último editor
     };
 
     // Realizar la actualización en la base de datos
@@ -690,11 +695,12 @@ router.patch('/bitacoraenf/:id', (req, res) => {
 
         res.setHeader('Content-Type', 'application/json');
         res.json({
-            message: `Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a ${estadoSolicitud}.`
+            message: `Registro actualizado exitosamente en bitacoraenf y el estado de la solicitud a ${estadoSolicitud}.`,
+            timestamp_no_editable: timestamp_no_editable,
+            ultimo_editor: ultimo_editor
         });
     });
 });
-
 
   // Crear un endpoint PATCH para actualizar las columnas en la tabla bitacoraenf
 router.patch('/bitacoranes/:id', (req, res) => {
