@@ -87,7 +87,7 @@ router.post('/login', (req, res) => {
 
 // Ruta para obtener información del usuario autenticado
 router.get('/user', authenticateToken, (req, res) => {
-    const query = 'SELECT nombre, ap_paterno, ap_materno, nivel_usuario, email, pantallasDisponibles, especialidad FROM usuarios WHERE id_usuario = ?';
+    const query = 'SELECT nombre, ap_paterno, ap_materno, nivel_usuario, email, pantallasDisponibles, especialidad, turno FROM usuarios WHERE id_usuario = ?';
 
     db.query(query, [req.user.id], (err, results) => {
         if (err) {
@@ -107,7 +107,8 @@ router.get('/user', authenticateToken, (req, res) => {
             rol_user: user.nivel_usuario,
             email: user.email,
             pantallas: user.pantallasDisponibles,
-            especialidad: user.especialidad 
+            especialidad: user.especialidad,
+            turno: user.turno
         });
     });
 });
