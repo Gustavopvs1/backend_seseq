@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
+const bcrypt = require('bcrypt');
 
 // Ruta para obtener todos los usuarios
 router.get('/users', (req, res) => {
@@ -106,6 +107,61 @@ router.patch('/users/:id', (req, res) => {
 
         res.json({ message: 'User updated successfully.' });
     });
+});
+
+// Ruta para actualizar la contraseña de un usuario
+router.patch('/password/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { newPassword, confirmPassword } = req.body;
+
+    try {
+        // Validaciones
+        if (!newPassword || !confirmPassword) {
+            return res.status(400).json({ 
+                message: 'Se requieren ambos campos de contraseña.' 
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ 
+                message: 'Las contraseñas no coinciden.' 
+            });
+        }
+
+        // Validación adicional de longitud de contraseña si lo deseas
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                message: 'La contraseña debe tener al menos 6 caracteres.' 
+            });
+        }
+
+        // Hashear la nueva contraseña
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Actualizar la contraseña en la base de datos
+        const query = 'UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?';
+        db.query(query, [hashedPassword, userId], (err, result) => {
+            if (err) {
+                console.error('Error updating password:', err);
+                return res.status(500).json({ 
+                    message: 'Error al actualizar la contraseña en la base de datos.' 
+                });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ 
+                    message: 'Usuario no encontrado.' 
+                });
+            }
+
+            res.json({ message: 'Contraseña actualizada exitosamente.' });
+        });
+    } catch (err) {
+        console.error('Error hashing password:', err);
+        res.status(500).json({ 
+            message: 'Error al procesar la contraseña.' 
+        });
+    }
 });
 
 // Ruta para obtener pantallas disponibles para un usuario

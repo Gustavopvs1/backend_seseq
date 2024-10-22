@@ -44,14 +44,6 @@ app.use('/api/personal', personalRoutes);
 
 app.use('/api/pdf', pdfRoutes);
 
-// Servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'build'))); // O 'dist' dependiendo de tu herramienta de construcción
-
-// Redirigir todas las rutas al archivo index
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html')); // O 'dist' si es aplicable
-});
-
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
