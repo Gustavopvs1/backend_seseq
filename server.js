@@ -13,6 +13,7 @@ const anestesioRoutes = require('./routes/anestesio');
 const salasRoutes = require('./routes/salas')
 const personalRoutes = require('./routes/personal'); // Importar rutas de personal
 const path = require('path');
+const insumosRoutes = require('./routes/insumos');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -41,6 +42,8 @@ app.use('/api/salas', salasRoutes);
 app.use('/api/anestesio', anestesioRoutes);
 // Usar las rutas de personal
 app.use('/api/personal', personalRoutes);
+
+app.use ('/api/insumos', insumosRoutes);    
 
 app.use('/api/pdf', pdfRoutes);
 

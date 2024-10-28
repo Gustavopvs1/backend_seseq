@@ -1,6 +1,7 @@
 const express = require('express'); // Importa el módulo express para crear el router y manejar las rutas
 const router = express.Router(); // Crea un enrutador de express para manejar las rutas relacionadas con las solicitudes de cirugía
 const db = require('../database/db'); // Importa la conexión a la base de datos desde un archivo de configuración
+const jwt = require('jsonwebtoken');
 
 // Función para formatear fechas en formato YYYY-MM-DD
 const formatDateForDisplay = (date) => {
@@ -404,6 +405,22 @@ router.get('/:id', (req, res) => {
 // Crear una nueva solicitud de cirugía
 // Crear una nueva solicitud de cirugía
 router.post('/', (req, res) => {
+    // Verificación del token
+    const token = req.headers['authorization'];
+    let usuario;
+
+    if (token) {
+        try {
+            // Decodificar el token para obtener los datos del usuario
+            const decoded = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET);
+            usuario = decoded;
+        } catch (err) {
+            return res.status(401).json({ error: 'Token inválido' });
+        }
+    } else {
+        return res.status(401).json({ error: 'Token no proporcionado' });
+    }
+
     const solicitud = req.body;
 
     // Convertir campos específicos a mayúsculas
@@ -424,7 +441,7 @@ router.post('/', (req, res) => {
         'ap_materno', 'nombre_paciente', 'tipo_intervencion', 'fecha_solicitada',
         'hora_solicitada', 'tiempo_estimado', 'turno_solicitado', 'sala_quirofano',
         'nombre_cirujano', 'req_insumo', 'tipo_admision', 'estado_solicitud',
-        'procedimientos_paciente','diagnostico','procedimientos_extra'
+        'procedimientos_paciente', 'diagnostico', 'procedimientos_extra'
     ];
 
     for (const field of requiredFields) {
@@ -435,11 +452,22 @@ router.post('/', (req, res) => {
 
     console.log('Datos a insertar en la base de datos:', solicitud);
 
-    db.query('INSERT INTO solicitudes_cirugia SET ?', solicitud, (err, result) => {
+    // Iniciamos una transacción para asegurar la integridad de los datos
+    db.beginTransaction(err => {
         if (err) {
-            console.error('Error creating solicitud:', err);
-            res.status(500).json({ error: 'Error creating solicitud', details: err.message });
-        } else {
+            console.error('Error al iniciar la transacción:', err);
+            return res.status(500).json({ error: 'Error en la transacción', details: err.message });
+        }
+
+        // Primer paso: Insertar la solicitud
+        db.query('INSERT INTO solicitudes_cirugia SET ?', solicitud, (err, result) => {
+            if (err) {
+                return db.rollback(() => {
+                    console.error('Error creating solicitud:', err);
+                    res.status(500).json({ error: 'Error creating solicitud', details: err.message });
+                });
+            }
+
             const id_solicitud = result.insertId;
 
             // Generar el folio
@@ -449,17 +477,51 @@ router.post('/', (req, res) => {
 
             console.log('Folio generado:', folio);
 
-            // Actualizar el folio en la base de datos
+            // Segundo paso: Actualizar el folio
             db.query('UPDATE solicitudes_cirugia SET folio = ? WHERE id_solicitud = ?', [folio, id_solicitud], (updateErr) => {
                 if (updateErr) {
-                    console.error('Error updating folio:', updateErr);
-                    res.status(500).json({ error: 'Error updating folio', details: updateErr.message });
-                } else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.json({ message: 'Solicitud creada exitosamente.', id: id_solicitud, folio: folio });
+                    return db.rollback(() => {
+                        console.error('Error updating folio:', updateErr);
+                        res.status(500).json({ error: 'Error updating folio', details: updateErr.message });
+                    });
                 }
+
+                // Tercer paso: Insertar en la tabla de auditoría
+                const auditoria = {
+                    folio: folio,
+                    usuario: usuario.username, // Asumiendo que el username está en el token
+                    accion: 'CREACION_SOLICITUD',
+                    detalles: `Creación de nueva solicitud de cirugía para paciente ${solicitud.nombre_paciente} ${solicitud.ap_paterno} ${solicitud.ap_materno}`,
+                    fecha: new Date() // Timestamp actual
+                };
+
+                db.query('INSERT INTO auditoria_solicitudes SET ?', auditoria, (auditErr) => {
+                    if (auditErr) {
+                        return db.rollback(() => {
+                            console.error('Error inserting audit:', auditErr);
+                            res.status(500).json({ error: 'Error en auditoría', details: auditErr.message });
+                        });
+                    }
+
+                    // Si todo salió bien, hacemos commit de la transacción
+                    db.commit(commitErr => {
+                        if (commitErr) {
+                            return db.rollback(() => {
+                                console.error('Error en commit:', commitErr);
+                                res.status(500).json({ error: 'Error en commit', details: commitErr.message });
+                            });
+                        }
+
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json({ 
+                            message: 'Solicitud creada exitosamente.', 
+                            id: id_solicitud, 
+                            folio: folio 
+                        });
+                    });
+                });
             });
-        }
+        });
     });
 });
 
