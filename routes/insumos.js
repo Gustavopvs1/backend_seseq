@@ -20,6 +20,20 @@ router.get('/insumos', async (req, res) => {
   }
 });
 
+// Endpoint para obtener todos los insumos
+router.get('/paquetes', async (req, res) => {
+  try {
+    db.query('SELECT * FROM paquetes', (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener los paquetes' });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al procesar la solicitud' });
+  }
+});
+
 router.get('/insumos-disponibles', (req, res) => {
   // Consulta insumos
   db.query('SELECT * FROM insumos', (error, insumos) => {
@@ -62,6 +76,30 @@ router.post('/insumos', (req, res) => {
     }
 
     res.status(201).json({ message: 'Insumo agregado exitosamente', insumoId: result.insertId });
+  });
+});
+
+
+router.post('/paquetes', (req, res) => {
+  const { id_insumo, clave, nombre_insumo, nombre, descripcion } = req.body;
+
+  // Verificar que los campos obligatorios estén presentes
+  if (!id_insumo || !clave || !nombre_insumo || !nombre || !descripcion) {
+    return res.status(400).json({ message: 'id_insumo, clave, nombre y descripcion son campos obligatorios' });
+  }
+
+  // Query para insertar el paquete en la base de datos
+  const query = 'INSERT INTO paquetes (id_insumo, clave, nombre_insumo, nombre, descripcion) VALUES (?, ?, ?, ?, ?)';
+
+
+  // Ejecutar la consulta con los valores
+  db.query(query, [id_insumo, clave, nombre_insumo, nombre, descripcion], (err, result) => { // Asegúrate de incluir nombre_insumo aquí
+    if (err) {
+      console.error('Error al agregar el paquete:', err);
+      return res.status(500).json({ message: 'Error al agregar el paquete' });
+    }
+
+    res.status(201).json({ message: 'Paquete agregado exitosamente', paqueteId: result.insertId });
   });
 });
 
