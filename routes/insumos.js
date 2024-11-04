@@ -134,6 +134,24 @@ router.post('/insumos/:idInsumo/paquetes', (req, res) => {
 });
 
 
+router.delete('/paquetes/:idPaquete', (req, res) => {
+  const { idPaquete } = req.params;
+  
+  const query = 'DELETE FROM paquetes WHERE id_paquete = ?';
+  
+  db.query(query, [idPaquete], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar el paquete:', err);
+      return res.status(500).json({ message: 'Error al eliminar el paquete' });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Paquete no encontrado' });
+    }
+    
+    res.status(200).json({ message: 'Paquete eliminado correctamente' });
+  });
+});
 
 // Configuración de multer para manejar la subida de archivos
 const upload = multer({ dest: 'uploads/' });
