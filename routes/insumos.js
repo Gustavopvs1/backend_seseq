@@ -103,6 +103,38 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
+router.delete('/insumos/:idInsumo', (req, res) => {
+  const { idInsumo } = req.params;
+  const query = 'DELETE FROM insumos WHERE id_insumo = ?';
+
+  db.query(query, [idInsumo], (err, result) => {
+    if (err) {
+      console.error('Error al eliminar el insumo:', err);
+      return res.status(500).json({ message: 'Error al eliminar el insumo' });
+    }
+
+    res.status(200).json({ message: 'Insumo eliminado correctamente' });
+  });
+});
+
+router.post('/insumos/:idInsumo/paquetes', (req, res) => {
+  const { idInsumo } = req.params;
+  const { paquetes } = req.body;
+  const paquetesNombres = paquetes.join(', ');
+
+  const query = 'UPDATE insumos SET paquete = ? WHERE id_insumo = ?';
+  db.query(query, [paquetesNombres, idInsumo], (err) => {
+    if (err) {
+      console.error('Error al asociar paquetes al insumo:', err);
+      return res.status(500).json({ message: 'Error al asociar paquetes al insumo' });
+    }
+
+    res.status(200).json({ message: 'Paquetes asociados correctamente al insumo' });
+  });
+});
+
+
+
 // Configuración de multer para manejar la subida de archivos
 const upload = multer({ dest: 'uploads/' });
 
