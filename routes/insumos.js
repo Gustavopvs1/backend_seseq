@@ -119,20 +119,34 @@ router.delete('/insumos/:idInsumo', (req, res) => {
 
 router.post('/insumos/:idInsumo/paquetes', (req, res) => {
   const { idInsumo } = req.params;
-  const { paquetes } = req.body;
-  const paquetesNombres = paquetes.join(', ');
+  const paquetesIds = req.body.paquetesIds; // Asumiendo que el cuerpo de la solicitud tiene una propiedad "paquetesIds" con un array de ids
 
-  const query = 'UPDATE insumos SET paquete = ? WHERE id_insumo = ?';
-  db.query(query, [paquetesNombres, idInsumo], (err) => {
+  if (!paquetesIds || paquetesIds.length === 0) {
+    return res.status(400).json({ message: 'Debes seleccionar al menos un paquete' });
+  }
+
+  // Consulta para obtener los nombres de los paquetes seleccionados
+  const query = 'SELECT nombre FROM paquetes WHERE id_paquete IN (?)';
+  db.query(query, [paquetesIds], (err, paquetesResults) => {
     if (err) {
-      console.error('Error al asociar paquetes al insumo:', err);
-      return res.status(500).json({ message: 'Error al asociar paquetes al insumo' });
+      console.error('Error al obtener los nombres de los paquetes:', err);
+      return res.status(500).json({ message: 'Error al obtener los nombres de los paquetes' });
     }
 
-    res.status(200).json({ message: 'Paquetes asociados correctamente al insumo' });
+    const paquetesNombres = paquetesResults.map(p => p.nombre).join(', ');
+
+    // Consulta para actualizar el insumo con los paquetes seleccionados
+    const updateQuery = 'UPDATE insumos SET paquete = ? WHERE id_insumo = ?';
+    db.query(updateQuery, [paquetesNombres, idInsumo], (err) => {
+      if (err) {
+        console.error('Error al asociar paquetes al insumo:', err);
+        return res.status(500).json({ message: 'Error al asociar paquetes al insumo' });
+      }
+
+      res.status(200).json({ message: 'Paquetes asociados correctamente al insumo' });
+    });
   });
 });
-
 
 router.delete('/paquetes/:idPaquete', (req, res) => {
   const { idPaquete } = req.params;
