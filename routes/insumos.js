@@ -103,6 +103,59 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
+router.post('/solicitudes-insumos', (req, res) => {
+  const { folio, nombre_insumos, cantidades_insumos, nombre_paquetes, cantidades_paquetes } = req.body;
+  const estado = req.body.estado || 'Sin solicitud'; // Valor predeterminado 'Sin solicitud'
+
+  // Verificar que los campos obligatorios estén presentes
+  if (!folio || !nombre_insumos || !cantidades_insumos) {
+    return res.status(400).json({ message: 'folio, nombre_insumos y cantidades_insumos son campos obligatorios' });
+  }
+
+  // Convertir los arrays a cadenas separadas por comas (si no lo están ya)
+  const insumos = Array.isArray(nombre_insumos) ? nombre_insumos.join(', ') : nombre_insumos;
+  const cantidadesInsumos = Array.isArray(cantidades_insumos) ? cantidades_insumos.join(', ') : cantidades_insumos;
+  const paquetes = nombre_paquetes ? (Array.isArray(nombre_paquetes) ? nombre_paquetes.join(', ') : nombre_paquetes) : '';
+  const cantidadesPaquetes = cantidades_paquetes ? (Array.isArray(cantidades_paquetes) ? cantidades_paquetes.join(', ') : cantidades_paquetes) : '';
+
+  // Query para insertar la solicitud de insumos en la base de datos
+  const query = `
+    INSERT INTO solicitudes_insumos (folio, nombre_insumos, cantidades_insumos, nombre_paquetes, cantidades_paquetes, estado)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  // Ejecutar la consulta con los valores
+  db.query(query, [folio, insumos, cantidadesInsumos, paquetes, cantidadesPaquetes, estado], (err, result) => {
+    if (err) {
+      console.error('Error al agregar la solicitud de insumo:', err);
+      return res.status(500).json({ message: 'Error al agregar la solicitud de insumo' });
+    }
+
+    res.status(201).json({ message: 'Solicitud de insumo agregada exitosamente', solicitudInsumoId: result.insertId });
+  });
+});
+
+
+// Obtener todas las solicitudes de insumos
+router.get('/solicitudes-insumos', (req, res) => {
+  // Consulta para obtener todas las solicitudes de la tabla solicitud_insumo
+  const query = 'SELECT * FROM solicitudes_insumos';
+
+  // Ejecutar la consulta
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error al obtener las solicitudes de insumos:', err);
+      return res.status(500).json({ message: 'Error al obtener las solicitudes de insumos' });
+    }
+
+    // Enviar los resultados en la respuesta
+    res.status(200).json(results);
+  });
+});
+
+
+
+
 router.delete('/insumos/:idInsumo', (req, res) => {
   const { idInsumo } = req.params;
   const query = 'DELETE FROM insumos WHERE id_insumo = ?';
