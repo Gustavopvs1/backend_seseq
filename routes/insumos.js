@@ -154,6 +154,25 @@ router.get('/solicitudes-insumos', (req, res) => {
 });
 
 
+// Obtener una solicitud por ID
+router.get('/:id', (req, res) => {
+  const id = req.params.id;
+  db.query('SELECT * FROM solicitudes_insumos WHERE id = ?', [id], (err, results) => {
+      if (err) {
+          console.error('Error fetching solicitud by id:', err);
+          res.status(500).json({ error: 'Error fetching solicitud by id' });
+      } else if (results.length === 0) {
+          res.status(404).json({ error: 'Solicitud not found' });
+      } else {
+          const solicitud = results[0];
+          // Formatear las fechas para visualización
+          res.setHeader('Content-Type', 'application/json');
+          res.json(solicitud);
+      }
+  });
+});
+
+
 
 
 router.delete('/insumos/:idInsumo', (req, res) => {
