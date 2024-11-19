@@ -155,7 +155,7 @@ router.get('/solicitudes-insumos', (req, res) => {
 
 
 // Obtener una solicitud por ID
-router.get('/:id', (req, res) => {
+router.get('/solicitudes-insumos/:id', (req, res) => {
   const id = req.params.id;
   db.query('SELECT * FROM solicitudes_insumos WHERE id = ?', [id], (err, results) => {
       if (err) {
