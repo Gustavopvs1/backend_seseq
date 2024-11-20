@@ -172,6 +172,42 @@ router.get('/solicitudes-insumos/:id', (req, res) => {
   });
 });
 
+router.patch('/solicitudes-insumos/:id', (req, res) => {
+  const id = req.params.id;
+  const { nombre_insumos, cantidades_insumos, disponibilidad } = req.body;
+
+  // Calcular el estado basado en la disponibilidad
+  const disponibilidades = disponibilidad.split(','); // Array de '1' o '0'
+  const todosDisponibles = disponibilidades.every(d => d === '1');
+  const algunoDisponible = disponibilidades.some(d => d === '1');
+  const nuevoEstado = todosDisponibles
+    ? 'Disponible'
+    : algunoDisponible
+    ? 'Solicitado'
+    : 'Pendiente';
+
+  // Actualizar la solicitud
+  const query = `
+    UPDATE solicitudes_insumos 
+    SET nombre_insumos = ?, cantidades_insumos = ?, disponibilidad = ?, estado = ?
+    WHERE id = ?
+  `;
+  db.query(
+    query,
+    [nombre_insumos, cantidades_insumos, disponibilidad, nuevoEstado, id],
+    (err, results) => {
+      if (err) {
+        console.error('Error actualizando solicitud:', err);
+        res.status(500).json({ error: 'Error actualizando solicitud' });
+      } else {
+        res.json({ message: 'Solicitud actualizada exitosamente', estado: nuevoEstado });
+      }
+    }
+  );
+});
+
+
+
 
 
 
