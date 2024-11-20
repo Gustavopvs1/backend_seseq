@@ -153,6 +153,23 @@ router.get('/solicitudes-insumos', (req, res) => {
   });
 });
 
+// Obtener una solicitud por folio
+router.get('/solicitudes-insumos/folio/:folio', (req, res) => {
+  const folio = req.params.folio;
+  db.query('SELECT * FROM solicitudes_insumos WHERE folio = ?', [folio], (err, results) => {
+    if (err) {
+      console.error('Error fetching solicitud by folio:', err);
+      res.status(500).json({ error: 'Error fetching solicitud by folio' });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: 'No se encontró una solicitud con ese folio' });
+    } else {
+      // En caso de múltiples insumos asociados al folio, devolverlos como un arreglo
+      res.setHeader('Content-Type', 'application/json');
+      res.json(results); // Retorna todos los insumos asociados al folio
+    }
+  });
+});
+
 
 // Obtener una solicitud por ID
 router.get('/solicitudes-insumos/:id', (req, res) => {
@@ -268,6 +285,7 @@ router.post('/insumos/:idInsumo/paquetes', (req, res) => {
     });
   });
 });
+
 
 router.delete('/paquetes/:idPaquete', (req, res) => {
   const { idPaquete } = req.params;
