@@ -176,22 +176,30 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
   const id = req.params.id;
   const { nombre_insumos, cantidades_insumos, disponibilidad } = req.body;
 
-  // Calcular el estado basado en la disponibilidad
-  const disponibilidades = disponibilidad.split(','); // Array de '1' o '0'
-  const todosDisponibles = disponibilidades.every(d => d === '1');
-  const algunoDisponible = disponibilidades.some(d => d === '1');
-  const nuevoEstado = todosDisponibles
-    ? 'Disponible'
-    : algunoDisponible
-    ? 'Solicitado'
-    : 'Pendiente';
+  // Validar que los arrays tengan la misma longitud
+  const nombresArray = nombre_insumos.split(',');
+  const disponibilidadArray = disponibilidad.split(',');
 
-  // Actualizar la solicitud
+  // Calcular el nuevo estado basado en la disponibilidad
+  const todosDisponibles = disponibilidadArray.every(d => d === '1');
+  const algunoDisponible = disponibilidadArray.some(d => d === '1');
+  
+  const nuevoEstado = todosDisponibles 
+    ? 'Disponible'    // Si todos los insumos están disponibles
+    : algunoDisponible 
+    ? 'Solicitado'    // Si al menos uno está disponible
+    : 'Pendiente';    // Si ninguno está disponible
+
+  // Actualizar en la base de datos
   const query = `
     UPDATE solicitudes_insumos 
-    SET nombre_insumos = ?, cantidades_insumos = ?, disponibilidad = ?, estado = ?
+    SET nombre_insumos = ?,
+        cantidades_insumos = ?,
+        disponibilidad = ?,
+        estado = ?
     WHERE id = ?
   `;
+
   db.query(
     query,
     [nombre_insumos, cantidades_insumos, disponibilidad, nuevoEstado, id],
@@ -199,16 +207,21 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
       if (err) {
         console.error('Error actualizando solicitud:', err);
         res.status(500).json({ error: 'Error actualizando solicitud' });
-      } else {
-        res.json({ message: 'Solicitud actualizada exitosamente', estado: nuevoEstado });
+        return;
       }
+
+      res.json({
+        message: 'Solicitud actualizada exitosamente',
+        datos: {
+          nombre_insumos,
+          cantidades_insumos,
+          disponibilidad,
+          estado: nuevoEstado
+        }
+      });
     }
   );
 });
-
-
-
-
 
 
 router.delete('/insumos/:idInsumo', (req, res) => {
