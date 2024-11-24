@@ -103,91 +103,60 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
-router.post('/solicitudes-insumos', (req, res) => {
-  const { folio, nombre_insumos, cantidades_insumos, nombre_paquetes, cantidades_paquetes } = req.body;
-  const estado = req.body.estado || 'Sin solicitud'; // Valor predeterminado 'Sin solicitud'
+// Endpoint para actualizar datos en solicitudes_cirugia
+router.patch('/solicitudes-insumos/:id', (req, res) => {
+  const { id } = req.params;
+  const {
+    material_adicional,
+    material_externo,
+    servicios,
+    nombre_paquete,
+    disponibilidad,
+    estado_insumos,
+    cantidad_adicional,
+    cantidad_externo,
+    cantidad_servicios,
+    cantidad_paquete,
+  } = req.body;
 
-  // Verificar que los campos obligatorios estén presentes
-  if (!folio || !nombre_insumos || !cantidades_insumos) {
-    return res.status(400).json({ message: 'folio, nombre_insumos y cantidades_insumos son campos obligatorios' });
-  }
+  // Validación y manejo de campos que pueden ser arreglos
+  const dataToUpdate = {
+    material_adicional: Array.isArray(material_adicional) ? material_adicional.join(', ') : material_adicional || null,
+    material_externo: Array.isArray(material_externo) ? material_externo.join(', ') : material_externo || null,
+    servicios: Array.isArray(servicios) ? servicios.join(', ') : servicios || null,
+    nombre_paquete: nombre_paquete || null,
+    disponibilidad: disponibilidad || null,
+    estado_insumos: estado_insumos || 'Sin solicitud', // Valor por defecto
+    cantidad_adicional: Array.isArray(cantidad_adicional) ? cantidad_adicional.join(', ') : cantidad_adicional || null,
+    cantidad_externo: cantidad_externo || null,
+    cantidad_servicios: cantidad_servicios || null,
+    cantidad_paquete: cantidad_paquete || null,
+  };
 
-  // Convertir los arrays a cadenas separadas por comas (si no lo están ya)
-  const insumos = Array.isArray(nombre_insumos) ? nombre_insumos.join(', ') : nombre_insumos;
-  const cantidadesInsumos = Array.isArray(cantidades_insumos) ? cantidades_insumos.join(', ') : cantidades_insumos;
-  const paquetes = nombre_paquetes ? (Array.isArray(nombre_paquetes) ? nombre_paquetes.join(', ') : nombre_paquetes) : '';
-  const cantidadesPaquetes = cantidades_paquetes ? (Array.isArray(cantidades_paquetes) ? cantidades_paquetes.join(', ') : cantidades_paquetes) : '';
+  // Generar query dinámico para actualizar solo los campos enviados
+  const fields = Object.keys(dataToUpdate)
+    .map((key) => `${key} = ?`)
+    .join(', ');
 
-  // Query para insertar la solicitud de insumos en la base de datos
-  const query = `
-    INSERT INTO solicitudes_insumos (folio, nombre_insumos, cantidades_insumos, nombre_paquetes, cantidades_paquetes, estado)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
+  const values = Object.values(dataToUpdate);
 
-  // Ejecutar la consulta con los valores
-  db.query(query, [folio, insumos, cantidadesInsumos, paquetes, cantidadesPaquetes, estado], (err, result) => {
+  // Ejecutar la actualización en la base de datos
+  const query = `UPDATE solicitudes_cirugia SET ${fields} WHERE id_solicitud = ?`;
+
+  db.query(query, [...values, id], (err, result) => {
     if (err) {
-      console.error('Error al agregar la solicitud de insumo:', err);
-      return res.status(500).json({ message: 'Error al agregar la solicitud de insumo' });
+      console.error('Error al actualizar solicitud:', err);
+      return res.status(500).json({ message: 'Error al actualizar solicitud', error: err });
     }
 
-    res.status(201).json({ message: 'Solicitud de insumo agregada exitosamente', solicitudInsumoId: result.insertId });
-  });
-});
-
-
-// Obtener todas las solicitudes de insumos
-router.get('/solicitudes-insumos', (req, res) => {
-  // Consulta para obtener todas las solicitudes de la tabla solicitud_insumo
-  const query = 'SELECT * FROM solicitudes_insumos';
-
-  // Ejecutar la consulta
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error al obtener las solicitudes de insumos:', err);
-      return res.status(500).json({ message: 'Error al obtener las solicitudes de insumos' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
 
-    // Enviar los resultados en la respuesta
-    res.status(200).json(results);
+    res.json({ message: 'Solicitud actualizada correctamente', id });
   });
 });
 
-// Obtener una solicitud por folio
-router.get('/solicitudes-insumos/folio/:folio', (req, res) => {
-  const folio = req.params.folio;
-  db.query('SELECT * FROM solicitudes_insumos WHERE folio = ?', [folio], (err, results) => {
-    if (err) {
-      console.error('Error fetching solicitud by folio:', err);
-      res.status(500).json({ error: 'Error fetching solicitud by folio' });
-    } else if (results.length === 0) {
-      res.status(404).json({ error: 'No se encontró una solicitud con ese folio' });
-    } else {
-      // En caso de múltiples insumos asociados al folio, devolverlos como un arreglo
-      res.setHeader('Content-Type', 'application/json');
-      res.json(results); // Retorna todos los insumos asociados al folio
-    }
-  });
-});
-
-
-// Obtener una solicitud por ID
-router.get('/solicitudes-insumos/:id', (req, res) => {
-  const id = req.params.id;
-  db.query('SELECT * FROM solicitudes_insumos WHERE id = ?', [id], (err, results) => {
-      if (err) {
-          console.error('Error fetching solicitud by id:', err);
-          res.status(500).json({ error: 'Error fetching solicitud by id' });
-      } else if (results.length === 0) {
-          res.status(404).json({ error: 'Solicitud not found' });
-      } else {
-          const solicitud = results[0];
-          // Formatear las fechas para visualización
-          res.setHeader('Content-Type', 'application/json');
-          res.json(solicitud);
-      }
-  });
-});
 
 router.patch('/solicitudes-insumos/:id', (req, res) => {
   const id = req.params.id;
@@ -238,6 +207,24 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
       });
     }
   );
+});
+
+// Obtener una solicitud por ID
+router.get('/solicitudes-insumos/:id', (req, res) => {
+  const id = req.params.id;
+  db.query('SELECT * FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
+      if (err) {
+          console.error('Error fetching solicitud by id:', err);
+          res.status(500).json({ error: 'Error fetching solicitud by id' });
+      } else if (results.length === 0) {
+          res.status(404).json({ error: 'Solicitud not found' });
+      } else {
+          const solicitud = results[0];
+          // Formatear las fechas para visualización
+          res.setHeader('Content-Type', 'application/json');
+          res.json(solicitud);
+      }
+  });
 });
 
 

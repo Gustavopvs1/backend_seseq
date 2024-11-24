@@ -5,7 +5,7 @@ const path = require('path');
 const importInsumosToDB = async () => {
   try {
     // Lee el archivo Excel usando xlsx
-    const workbook = xlsx.readFile('D:/Descargas/insumos.xlsx');
+    const workbook = xlsx.readFile('C:/Users/rober/OneDrive/Escritorio/insumos.xlsx');
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
