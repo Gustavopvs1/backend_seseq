@@ -20,6 +20,36 @@ router.get('/insumos', async (req, res) => {
   }
 });
 
+
+// Endpoint para obtener todos los materiales adicionales
+router.get('/materiales-adicionales', async (req, res) => {
+  try {
+    db.query('SELECT * FROM material_adicional', (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener los materiales adicionales' });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al procesar la solicitud' });
+  }
+});
+
+
+// Endpoint para obtener todos los medicamentos
+router.get('/medicamentos', async (req, res) => {
+  try {
+    db.query('SELECT * FROM medicamentos', (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener los medicamentos' });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al procesar la solicitud' });
+  }
+});
+
 // Endpoint para obtener todos los insumos
 router.get('/paquetes', async (req, res) => {
   try {
