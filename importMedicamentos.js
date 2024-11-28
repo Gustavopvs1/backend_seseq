@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const importMaterialAdicionalToDB = async () => {
   try {
     // Lee el archivo Excel usando xlsx
-    const workbook = xlsx.readFile('C:/Users/rober/Downloads/5.- MEDICAMENTOS.xlsx');
+    const workbook = xlsx.readFile('D:/Descargas/5.- MEDICAMENTOS.xlsx');
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
