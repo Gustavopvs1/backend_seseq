@@ -141,12 +141,12 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     material_externo,
     servicios,
     nombre_paquete,
-    disponibilidad,
     estado_insumos,
     cantidad_adicional,
     cantidad_externo,
     cantidad_servicios,
     cantidad_paquete,
+    resumen_medico
   } = req.body;
 
   // Validación y manejo de campos que pueden ser arreglos
@@ -155,12 +155,12 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     material_externo: Array.isArray(material_externo) ? material_externo.join(', ') : material_externo || null,
     servicios: Array.isArray(servicios) ? servicios.join(', ') : servicios || null,
     nombre_paquete: nombre_paquete || null,
-    disponibilidad: disponibilidad || null,
     estado_insumos: estado_insumos || 'Sin solicitud', // Valor por defecto
     cantidad_adicional: Array.isArray(cantidad_adicional) ? cantidad_adicional.join(', ') : cantidad_adicional || null,
     cantidad_externo: cantidad_externo || null,
     cantidad_servicios: cantidad_servicios || null,
     cantidad_paquete: cantidad_paquete || null,
+    resumen_medico: resumen_medico || null
   };
 
   // Generar query dinámico para actualizar solo los campos enviados
