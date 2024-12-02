@@ -77,13 +77,42 @@ router.post('/login', (req, res) => {
             return res.status(401).json({ message: 'Correo electrónico o contraseña inválidos' });
         }
 
-        // Include nivel_usuario in the token
-        const token = jwt.sign({ id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario}, JWT_SECRET, { expiresIn: '3h' });
+        // Generar token con información del usuario
+        const token = jwt.sign(
+            { id: user.id_usuario, email: user.email, nivel_usuario: user.nivel_usuario },
+            JWT_SECRET,
+            { expiresIn: '3h' }
+        );
 
-        console.log('Generated token:', token);
+        // Guardar el inicio de sesión en la base de datos
+        const timestamp = new Date(); // Fecha y hora actual
+        const logQuery = 'INSERT INTO login_logs (email, timestamp) VALUES (?, ?)';
+
+        db.query(logQuery, [user.email, timestamp], (logErr) => {
+            if (logErr) {
+                console.error('Error al registrar el inicio de sesión:', logErr);
+            } else {
+                console.log(`Inicio de sesión registrado para ${user.email} en ${timestamp}`);
+            }
+        });
+
+        // Enviar respuesta al cliente
         res.json({ message: 'Login successful.', token });
     });
 });
+
+router.get('/login-logs', (req, res) => {
+    const query = 'SELECT * FROM login_logs ORDER BY timestamp DESC';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching login logs:', err);
+            res.status(500).json({ message: 'Error fetching login logs.' });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 
 // Ruta para obtener información del usuario autenticado
 router.get('/user', authenticateToken, (req, res) => {
