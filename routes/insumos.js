@@ -188,56 +188,132 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
 });
 
 
-router.patch('/solicitudes-insumos/:id', (req, res) => {
+router.patch('/insumos-disponibles/:id', (req, res) => {
   const id = req.params.id;
-  const { nombre_insumos, cantidades_insumos, disponibilidad } = req.body;
+  const {
+    material_adicional,
+    material_externo,
+    servicios,
+    nombre_paquete,
+    medicamentos,
+    cantidad_adicional,
+    cantidad_externo,
+    cantidad_servicios,
+    cantidad_paquete,
+    cantidad_medicamento,
+    disponibilidad_adicional,
+    disponibilidad_externo,
+    disponibilidad_servicio,
+    disponibilidad_paquete,
+    disponibilidad_medicamento
+  } = req.body;
 
-  // Validar que los arrays tengan la misma longitud
-  const nombresArray = nombre_insumos.split(',');
-  const disponibilidadArray = disponibilidad.split(',');
+  // Verificar si los arrays de cantidades y disponibilidades tienen la misma longitud
+  const validacionArrays = [
+    [material_adicional, cantidad_adicional, disponibilidad_adicional],
+    [material_externo, cantidad_externo, disponibilidad_externo],
+    [servicios, cantidad_servicios, disponibilidad_servicio],
+    [nombre_paquete, cantidad_paquete, disponibilidad_paquete],
+    [medicamentos, cantidad_medicamento, disponibilidad_medicamento]
+  ].every(([item, cantidad, disponibilidad]) =>
+    item && cantidad && disponibilidad && 
+    item.split(',').length === cantidad.split(',').length && 
+    cantidad.split(',').length === disponibilidad.split(',').length
+  );
 
-  // Calcular el nuevo estado basado en la disponibilidad
-  const todosDisponibles = disponibilidadArray.every(d => d === '1');
-  const algunoDisponible = disponibilidadArray.some(d => d === '1');
-  
-  const nuevoEstado = todosDisponibles 
-    ? 'Disponible'    // Si todos los insumos están disponibles
-    : algunoDisponible 
-    ? 'Solicitado'    // Si al menos uno está disponible
-    : 'Pendiente';    // Si ninguno está disponible
+  if (!validacionArrays) {
+    return res.status(400).json({
+      error: 'Los arrays de materiales, cantidades y disponibilidades deben tener la misma longitud para cada categoría.'
+    });
+  }
 
-  // Actualizar en la base de datos
+  // Calcular estado: "Disponible" si todos disponibles, "Solicitado" si falta al menos uno
+  const disponibilidades = [
+    ...disponibilidad_adicional.split(','),
+    ...disponibilidad_externo.split(','),
+    ...disponibilidad_servicio.split(','),
+    ...disponibilidad_paquete.split(','),
+    ...disponibilidad_medicamento.split(',')
+  ];
+
+  const todosDisponibles = disponibilidades.every(d => d === '1');
+  const estado_insumos = todosDisponibles ? 'Disponible' : 'Solicitado';
+
+  // Query para actualizar en la base de datos
   const query = `
-    UPDATE solicitudes_insumos 
-    SET nombre_insumos = ?,
-        cantidades_insumos = ?,
-        disponibilidad = ?,
-        estado = ?
-    WHERE id = ?
+    UPDATE solicitudes_cirugia
+    SET 
+      material_adicional = ?,
+      material_externo = ?,
+      servicios = ?,
+      nombre_paquete = ?,
+      medicamentos = ?,
+      cantidad_adicional = ?,
+      cantidad_externo = ?,
+      cantidad_servicios = ?,
+      cantidad_paquete = ?,
+      cantidad_medicamento = ?,
+      disponibilidad_adicional = ?,
+      disponibilidad_externo = ?,
+      disponibilidad_servicio = ?,
+      disponibilidad_paquete = ?,
+      disponibilidad_medicamento = ?,
+      estado_insumos = ?
+    WHERE id_solicitud = ?
   `;
 
-  db.query(
-    query,
-    [nombre_insumos, cantidades_insumos, disponibilidad, nuevoEstado, id],
-    (err, results) => {
-      if (err) {
-        console.error('Error actualizando solicitud:', err);
-        res.status(500).json({ error: 'Error actualizando solicitud' });
-        return;
-      }
+  // Parámetros para el query
+  const parametros = [
+    material_adicional,
+    material_externo,
+    servicios,
+    nombre_paquete,
+    medicamentos,
+    cantidad_adicional,
+    cantidad_externo,
+    cantidad_servicios,
+    cantidad_paquete,
+    cantidad_medicamento,
+    disponibilidad_adicional,
+    disponibilidad_externo,
+    disponibilidad_servicio,
+    disponibilidad_paquete,
+    disponibilidad_medicamento,
+    estado_insumos,
+    id
+  ];
 
-      res.json({
-        message: 'Solicitud actualizada exitosamente',
-        datos: {
-          nombre_insumos,
-          cantidades_insumos,
-          disponibilidad,
-          estado: nuevoEstado
-        }
-      });
+  // Ejecutar el query
+  db.query(query, parametros, (err, results) => {
+    if (err) {
+      console.error('Error actualizando solicitud:', err);
+      return res.status(500).json({ error: 'Error actualizando solicitud' });
     }
-  );
+
+    res.json({
+      message: 'Solicitud actualizada exitosamente',
+      datos: {
+        material_adicional,
+        material_externo,
+        servicios,
+        nombre_paquete,
+        medicamentos,
+        cantidad_adicional,
+        cantidad_externo,
+        cantidad_servicios,
+        cantidad_paquete,
+        cantidad_medicamento,
+        disponibilidad_adicional,
+        disponibilidad_externo,
+        disponibilidad_servicio,
+        disponibilidad_paquete,
+        disponibilidad_medicamento,
+        estado_insumos
+      }
+    });
+  });
 });
+
 
 // Obtener una solicitud por ID
 router.get('/solicitudes-insumos/:id', (req, res) => {
