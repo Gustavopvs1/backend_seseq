@@ -189,52 +189,55 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
 
 
 router.patch('/insumos-disponibles/:id', (req, res) => {
+  console.log("Datos recibidos:", req.body)
   const id = req.params.id;
   const {
-    material_adicional,
-    material_externo,
-    servicios,
-    nombre_paquete,
-    medicamentos,
-    cantidad_adicional,
-    cantidad_externo,
-    cantidad_servicios,
-    cantidad_paquete,
-    cantidad_medicamento,
-    disponibilidad_adicional,
-    disponibilidad_externo,
-    disponibilidad_servicio,
-    disponibilidad_paquete,
-    disponibilidad_medicamento
+    material_adicional = '',
+    material_externo = '',
+    servicios = '',
+    nombre_paquete = '',
+    medicamentos = '',
+    cantidad_adicional = '',
+    cantidad_externo = '',
+    cantidad_servicios = '',
+    cantidad_paquete = '',
+    cantidad_medicamento = '',
+    disponibilidad_material_adicional = '',
+    disponibilidad_material_externo = '',
+    disponibilidad_servicio = '',
+    disponibilidad_paquete = '',
+    disponibilidad_medicamento = ''
   } = req.body;
 
-  // Verificar si los arrays de cantidades y disponibilidades tienen la misma longitud
-  const validacionArrays = [
-    [material_adicional, cantidad_adicional, disponibilidad_adicional],
-    [material_externo, cantidad_externo, disponibilidad_externo],
+  // Filtrar las categorías que tienen datos para validar
+  const categoriasConDatos = [
+    [material_adicional, cantidad_adicional, disponibilidad_material_adicional],
+    [material_externo, cantidad_externo, disponibilidad_material_externo],
     [servicios, cantidad_servicios, disponibilidad_servicio],
     [nombre_paquete, cantidad_paquete, disponibilidad_paquete],
     [medicamentos, cantidad_medicamento, disponibilidad_medicamento]
-  ].every(([item, cantidad, disponibilidad]) =>
-    item && cantidad && disponibilidad && 
-    item.split(',').length === cantidad.split(',').length && 
+  ].filter(([item]) => item !== '');
+
+  const validacionArrays = categoriasConDatos.every(([item, cantidad, disponibilidad]) =>
+    cantidad && disponibilidad &&
+    item.split(',').length === cantidad.split(',').length &&
     cantidad.split(',').length === disponibilidad.split(',').length
   );
 
   if (!validacionArrays) {
     return res.status(400).json({
-      error: 'Los arrays de materiales, cantidades y disponibilidades deben tener la misma longitud para cada categoría.'
+      error: 'Los arrays de materiales, cantidades y disponibilidades deben tener la misma longitud para cada categoría con datos.'
     });
   }
 
   // Calcular estado: "Disponible" si todos disponibles, "Solicitado" si falta al menos uno
   const disponibilidades = [
-    ...disponibilidad_adicional.split(','),
-    ...disponibilidad_externo.split(','),
+    ...disponibilidad_material_adicional.split(','),
+    ...disponibilidad_material_externo.split(','),
     ...disponibilidad_servicio.split(','),
     ...disponibilidad_paquete.split(','),
     ...disponibilidad_medicamento.split(',')
-  ];
+  ].filter(Boolean); // Ignorar valores vacíos
 
   const todosDisponibles = disponibilidades.every(d => d === '1');
   const estado_insumos = todosDisponibles ? 'Disponible' : 'Solicitado';
@@ -274,8 +277,8 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     cantidad_servicios,
     cantidad_paquete,
     cantidad_medicamento,
-    disponibilidad_adicional,
-    disponibilidad_externo,
+    disponibilidad_material_adicional,
+    disponibilidad_material_externo,
     disponibilidad_servicio,
     disponibilidad_paquete,
     disponibilidad_medicamento,
@@ -303,8 +306,8 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
         cantidad_servicios,
         cantidad_paquete,
         cantidad_medicamento,
-        disponibilidad_adicional,
-        disponibilidad_externo,
+        disponibilidad_material_adicional,
+        disponibilidad_material_externo,
         disponibilidad_servicio,
         disponibilidad_paquete,
         disponibilidad_medicamento,
@@ -313,7 +316,6 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     });
   });
 });
-
 
 // Obtener una solicitud por ID
 router.get('/solicitudes-insumos/:id', (req, res) => {

@@ -5,7 +5,7 @@ const path = require('path');
 const importInsumosToDB = async () => {
   try {
     // Lee el archivo Excel usando xlsx
-    const workbook = xlsx.readFile('C:/Users/rober/OneDrive/Escritorio/insumos.xlsx');
+    const workbook = xlsx.readFile('C:/Users/rober/OneDrive/Escritorio/artro.xlsx');
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
@@ -21,21 +21,15 @@ const importInsumosToDB = async () => {
     // Itera sobre los datos y realiza la inserción en la base de datos
     for (const row of data) {
       // Extrae las columnas necesarias del archivo Excel y limpia los datos
-      const nombre = row['Nombre del sistema'] ? row['Nombre del sistema'].trim() : '';
-      const clave = row['Clave'] ? row['Clave'].trim() : '';
-      const descripcion = row['Descripcion'] ? row['Descripcion'].trim() : '';
-      const modulo = row['MODULO'] ? row['MODULO'].trim() : '';
+      const nombre = row['Nombre del sistema'] ? row['Nombre del sistema'].trim() : null;
+      const clave = row['Clave'] ? row['Clave'].trim() : null;
+      const descripcion = row['Descripcion'] ? row['Descripcion'].trim() : null;
 
-      // Verifica que los campos clave y nombre estén presentes antes de insertar
-      if (nombre && clave) {
-        // Inserta los datos en la tabla insumos con la especialidad fija en "Trauma y Ortopedia"
-        await connection.execute(
-          'INSERT INTO insumos (nombre, clave, descripcion, modulo, especialidad) VALUES (?, ?, ?, ?, ?)',
-          [nombre, clave, descripcion, modulo, 'Trauma y Ortopedia']
-        );
-      } else {
-        console.log('Fila inválida omitida:', row);
-      }
+      // Inserta los datos en la tabla insumos con la especialidad fija en "Trauma y Ortopedia"
+      await connection.execute(
+        'INSERT INTO insumos (nombre, clave, descripcion, especialidad) VALUES (?, ?, ?, ?)',
+        [nombre, clave, descripcion, 'Columna']
+      );
     }
 
     console.log('Datos de insumos importados con éxito.');
