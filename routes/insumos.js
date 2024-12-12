@@ -85,6 +85,64 @@ router.get('/insumos-disponibles', (req, res) => {
   });
 });
 
+router.get('/paquete-insumos', (req, res) => {
+  const query = `
+    SELECT 
+      pi.id,
+      pi.paquete_id,
+      p.nombre AS nombre_paquete,
+      p.descripcion AS descripcion_paquete,
+      pi.insumo_id,
+      i.clave AS clave_insumo,
+      i.descripcion AS descripcion_insumo,
+      pi.cantidad_default
+    FROM 
+      paquete_insumos pi
+    JOIN 
+      paquetes p ON pi.paquete_id = p.id
+    JOIN 
+      insumos i ON pi.insumo_id = i.id_insumo
+  `;
+
+  db.query(query, (error, resultados) => {
+    if (error) {
+      console.error('Error al obtener paquete-insumos:', error);
+      return res.status(500).json({ error: 'Error al obtener paquete-insumos' });
+    }
+
+    // Transformar los resultados para agrupar por paquete si es necesario
+    const paqueteInsumos = resultados.reduce((acumulador, item) => {
+      // Buscar si el paquete ya existe en el acumulador
+      let paqueteExistente = acumulador.find(
+        paquete => paquete.paquete_id === item.paquete_id
+      );
+
+      // Si no existe, crear un nuevo objeto de paquete
+      if (!paqueteExistente) {
+        paqueteExistente = {
+          paquete_id: item.paquete_id,
+          nombre_paquete: item.nombre_paquete,
+          descripcion_paquete: item.descripcion_paquete,
+          insumos: []
+        };
+        acumulador.push(paqueteExistente);
+      }
+
+      // Agregar el insumo al paquete
+      paqueteExistente.insumos.push({
+        insumo_id: item.insumo_id,
+        clave_insumo: item.clave_insumo,
+        descripcion_insumo: item.descripcion_insumo,
+        cantidad_default: item.cantidad_default
+      });
+
+      return acumulador;
+    }, []);
+
+    res.json(paqueteInsumos);
+  });
+});
+
 
 // Ruta para agregar un nuevo insumo
 router.post('/insumos', (req, res) => {
