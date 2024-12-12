@@ -199,11 +199,13 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     material_externo,
     servicios,
     nombre_paquete,
+    medicamentos,
     estado_insumos,
     cantidad_adicional,
     cantidad_externo,
     cantidad_servicios,
     cantidad_paquete,
+    cantidad_medicamento,
     resumen_medico
   } = req.body;
 
