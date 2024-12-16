@@ -206,7 +206,12 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     cantidad_servicios,
     cantidad_paquete,
     cantidad_medicamento,
-    resumen_medico
+    resumen_medico,
+    disponibilidad_adicional,
+    disponibilidad_externo,
+    disponibilidad_servicios,
+    disponibilidad_paquetes,
+    disponibilidad_medicamentos
   } = req.body;
 
   // Validación y manejo de campos que pueden ser arreglos
@@ -220,7 +225,12 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     cantidad_externo: cantidad_externo || null,
     cantidad_servicios: cantidad_servicios || null,
     cantidad_paquete: cantidad_paquete || null,
-    resumen_medico: resumen_medico || null
+    resumen_medico: resumen_medico || null,
+    disponibilidad_adicional: disponibilidad_adicional || "0",
+    disponibilidad_externo: disponibilidad_externo || "0",
+    disponibilidad_servicios: disponibilidad_servicios || "0",
+    disponibilidad_paquetes: disponibilidad_paquetes || "0",
+    disponibilidad_medicamentos: disponibilidad_medicamentos || "0"
   };
 
   // Generar query dinámico para actualizar solo los campos enviados
@@ -264,18 +274,18 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     cantidad_medicamento = '',
     disponibilidad_material_adicional = '',
     disponibilidad_material_externo = '',
-    disponibilidad_servicio = '',
-    disponibilidad_paquete = '',
-    disponibilidad_medicamento = ''
+    disponibilidad_servicios = '',
+    disponibilidad_paquetes = '',
+    disponibilidad_medicamentos = ''
   } = req.body;
 
   // Filtrar las categorías que tienen datos para validar
   const categoriasConDatos = [
     [material_adicional, cantidad_adicional, disponibilidad_material_adicional],
     [material_externo, cantidad_externo, disponibilidad_material_externo],
-    [servicios, cantidad_servicios, disponibilidad_servicio],
-    [nombre_paquete, cantidad_paquete, disponibilidad_paquete],
-    [medicamentos, cantidad_medicamento, disponibilidad_medicamento]
+    [servicios, cantidad_servicios, disponibilidad_servicios],
+    [nombre_paquete, cantidad_paquete, disponibilidad_paquetes],
+    [medicamentos, cantidad_medicamento, disponibilidad_medicamentos]
   ].filter(([item]) => item !== '');
 
   const validacionArrays = categoriasConDatos.every(([item, cantidad, disponibilidad]) =>
@@ -294,9 +304,9 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
   const disponibilidades = [
     ...disponibilidad_material_adicional.split(','),
     ...disponibilidad_material_externo.split(','),
-    ...disponibilidad_servicio.split(','),
-    ...disponibilidad_paquete.split(','),
-    ...disponibilidad_medicamento.split(',')
+    ...disponibilidad_servicios.split(','),
+    ...disponibilidad_paquetes.split(','),
+    ...disponibilidad_medicamentos.split(',')
   ].filter(Boolean); // Ignorar valores vacíos
 
   const todosDisponibles = disponibilidades.every(d => d === '1');
@@ -318,9 +328,9 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
       cantidad_medicamento = ?,
       disponibilidad_adicional = ?,
       disponibilidad_externo = ?,
-      disponibilidad_servicio = ?,
-      disponibilidad_paquete = ?,
-      disponibilidad_medicamento = ?,
+      disponibilidad_servicios = ?,
+      disponibilidad_paquetes = ?,
+      disponibilidad_medicamentos = ?,
       estado_insumos = ?
     WHERE id_solicitud = ?
   `;
@@ -339,9 +349,9 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     cantidad_medicamento,
     disponibilidad_material_adicional,
     disponibilidad_material_externo,
-    disponibilidad_servicio,
-    disponibilidad_paquete,
-    disponibilidad_medicamento,
+    disponibilidad_servicios,
+    disponibilidad_paquetes,
+    disponibilidad_medicamentos,
     estado_insumos,
     id
   ];
@@ -368,9 +378,9 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
         cantidad_medicamento,
         disponibilidad_material_adicional,
         disponibilidad_material_externo,
-        disponibilidad_servicio,
-        disponibilidad_paquete,
-        disponibilidad_medicamento,
+        disponibilidad_servicios,
+        disponibilidad_paquetes,
+        disponibilidad_medicamentos,
         estado_insumos
       }
     });
