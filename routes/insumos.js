@@ -191,7 +191,6 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
-// Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
   const { id } = req.params;
   const {
@@ -214,24 +213,74 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     disponibilidad_medicamentos
   } = req.body;
 
-  // Validación y manejo de campos que pueden ser arreglos
-  const dataToUpdate = {
-    material_adicional: Array.isArray(material_adicional) ? material_adicional.join(', ') : material_adicional || null,
-    material_externo: Array.isArray(material_externo) ? material_externo.join(', ') : material_externo || null,
-    servicios: Array.isArray(servicios) ? servicios.join(', ') : servicios || null,
-    nombre_paquete: nombre_paquete || null,
-    estado_insumos: estado_insumos || 'Sin solicitud', // Valor por defecto
-    cantidad_adicional: Array.isArray(cantidad_adicional) ? cantidad_adicional.join(', ') : cantidad_adicional || null,
-    cantidad_externo: cantidad_externo || null,
-    cantidad_servicios: cantidad_servicios || null,
-    cantidad_paquete: cantidad_paquete || null,
-    resumen_medico: resumen_medico || null,
-    disponibilidad_adicional: disponibilidad_adicional || "0",
-    disponibilidad_externo: disponibilidad_externo || "0",
-    disponibilidad_servicios: disponibilidad_servicios || "0",
-    disponibilidad_paquetes: disponibilidad_paquetes || "0",
-    disponibilidad_medicamentos: disponibilidad_medicamentos || "0"
+  // Objeto para almacenar solo los campos que realmente se van a actualizar
+  const dataToUpdate = {};
+  const availabilityFieldsToUpdate = {};
+
+  // Función para manejar cada tipo de insumo
+  const handleInsumoType = (type, items, quantityField, availabilityField) => {
+    if (items && items.length > 0) {
+      // Si hay items, agregar al objeto de actualización
+      dataToUpdate[type] = Array.isArray(items) ? items.join(', ') : items;
+      dataToUpdate[quantityField] = quantityField ? 
+        (Array.isArray(req.body[quantityField]) ? req.body[quantityField].join(', ') : req.body[quantityField]) 
+        : null;
+      
+      // Solo agregar disponibilidad si se proporciona explícitamente
+      if (req.body[availabilityField]) {
+        availabilityFieldsToUpdate[availabilityField] = req.body[availabilityField];
+      }
+    }
   };
+
+  // Procesar cada tipo de insumo
+  handleInsumoType(
+    'material_adicional', 
+    material_adicional, 
+    'cantidad_adicional', 
+    'disponibilidad_adicional'
+  );
+
+  handleInsumoType(
+    'material_externo', 
+    material_externo, 
+    'cantidad_externo', 
+    'disponibilidad_externo'
+  );
+
+  handleInsumoType(
+    'servicios', 
+    servicios, 
+    'cantidad_servicios', 
+    'disponibilidad_servicios'
+  );
+
+  handleInsumoType(
+    'nombre_paquete', 
+    nombre_paquete, 
+    'cantidad_paquete', 
+    'disponibilidad_paquetes'
+  );
+
+  handleInsumoType(
+    'medicamentos', 
+    medicamentos, 
+    'cantidad_medicamento', 
+    'disponibilidad_medicamentos'
+  );
+
+  // Agregar campos adicionales
+  if (estado_insumos) {
+    dataToUpdate.estado_insumos = estado_insumos;
+  }
+  if (resumen_medico) {
+    dataToUpdate.resumen_medico = resumen_medico;
+  }
+
+  // Si no hay campos para actualizar, devolver error
+  if (Object.keys(dataToUpdate).length === 0) {
+    return res.status(400).json({ message: 'No hay datos para actualizar' });
+  }
 
   // Generar query dinámico para actualizar solo los campos enviados
   const fields = Object.keys(dataToUpdate)
@@ -253,7 +302,17 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
       return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
 
-    res.json({ message: 'Solicitud actualizada correctamente', id });
+    // Imprimir los datos actualizados para verificación
+    console.log('Datos actualizados:', {
+      dataToUpdate,
+      availabilityFieldsToUpdate
+    });
+
+    res.json({ 
+      message: 'Solicitud actualizada correctamente', 
+      id,
+      updatedFields: Object.keys(dataToUpdate)
+    });
   });
 });
 
