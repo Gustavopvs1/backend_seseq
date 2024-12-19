@@ -193,7 +193,7 @@ router.post('/paquetes', (req, res) => {
 
 router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
-  const { insumos, resumen_medico } = req.body; // Ahora se incluye resumen_medico
+  const { insumos, resumen_medico } = req.body; // Ahora incluye resumen_medico y detalle_paquete
 
   if (!Array.isArray(insumos) || insumos.length === 0) {
     return res.status(400).json({ message: 'Se requiere un array de insumos' });
@@ -207,11 +207,12 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
     insumo.cantidad,
     insumo.disponibilidad || 0, // Por defecto, no disponible
     insumo.estado_insumos || 'Sin solicitud', // Estado por defecto
+    insumo.detalle_paquete || null, // Detalle del paquete o null si no aplica
   ]);
 
   const queryInsumos = `
     INSERT INTO solicitud_insumos 
-    (id_solicitud, tipo_insumo, insumo_id, nombre_insumo, cantidad, disponibilidad, estado_insumos)
+    (id_solicitud, tipo_insumo, insumo_id, nombre_insumo, cantidad, disponibilidad, estado_insumos, detalle_paquete)
     VALUES ?
   `;
 
@@ -233,10 +234,14 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
         return res.status(500).json({ message: 'Error al actualizar resumen_medico', error: err });
       }
 
-      res.json({ message: 'Insumos y resumen médico guardados correctamente', insertedRows: result.affectedRows });
+      res.json({
+        message: 'Insumos, detalle de paquetes y resumen médico guardados correctamente',
+        insertedRows: result.affectedRows,
+      });
     });
   });
 });
+
 
 router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
