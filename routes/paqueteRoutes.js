@@ -1,4 +1,4 @@
-const express = require('express');
+/* const express = require('express');
 const router = express.Router();
 
 // Exportar como función que recibe la conexión de base de datos
@@ -20,4 +20,4 @@ module.exports = (db) => {
     );
 
     return router;
-};
+}; */

@@ -14,8 +14,8 @@ const salasRoutes = require('./routes/salas')
 const personalRoutes = require('./routes/personal'); // Importar rutas de personal
 const path = require('path');
 const insumosRoutes = require('./routes/insumos');
-const paqueteRoutes = require('./routes/paqueteRoutes')(db);
-
+/* const paqueteRoutes = require('./routes/paqueteRoutes')(db);
+ */
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -38,7 +38,7 @@ app.use('/api/solicitudes', solicitudesRoutes);
 app.use('/api', eventsRoutes);
 app.use('/api/users', usersRouter);
 app.use('/api/salas', salasRoutes);
-app.use('/api/paquetes', paqueteRoutes);
+/* app.use('/api/paquetes', paqueteRoutes); */
 
 // Usar las rutas de anestesio
 app.use('/api/anestesio', anestesioRoutes);

@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+/* const mysql = require('mysql2');
 const db = require('../database/db');
 
 class PaqueteController {
@@ -180,4 +180,4 @@ class PaqueteController {
     }
 }
 
-module.exports = PaqueteController;
+module.exports = PaqueteController; */
