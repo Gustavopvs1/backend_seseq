@@ -191,106 +191,7 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
-router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
-  const { id_solicitud } = req.params;
-  const { insumos, resumen_medico } = req.body; // Ahora incluye resumen_medico y detalle_paquete
-
-  if (!Array.isArray(insumos) || insumos.length === 0) {
-    return res.status(400).json({ message: 'Se requiere un array de insumos' });
-  }
-
-  const values = insumos.map((insumo) => [
-    id_solicitud,
-    insumo.tipo_insumo,
-    insumo.insumo_id || null,
-    insumo.nombre_insumo,
-    insumo.cantidad,
-    insumo.disponibilidad || 0, // Por defecto, no disponible
-    insumo.estado_insumos || 'Sin solicitud', // Estado por defecto
-    insumo.detalle_paquete || null, // Detalle del paquete o null si no aplica
-  ]);
-
-  const queryInsumos = `
-    INSERT INTO solicitud_insumos 
-    (id_solicitud, tipo_insumo, insumo_id, nombre_insumo, cantidad, disponibilidad, estado_insumos, detalle_paquete)
-    VALUES ?
-  `;
-
-  const queryResumen = `
-    UPDATE solicitudes_cirugia
-    SET resumen_medico = ?
-    WHERE id_solicitud = ?
-  `;
-
-  db.query(queryInsumos, [values], (err, result) => {
-    if (err) {
-      console.error('Error al insertar insumos:', err);
-      return res.status(500).json({ message: 'Error al insertar insumos', error: err });
-    }
-
-    db.query(queryResumen, [resumen_medico, id_solicitud], (err) => {
-      if (err) {
-        console.error('Error al actualizar resumen_medico:', err);
-        return res.status(500).json({ message: 'Error al actualizar resumen_medico', error: err });
-      }
-
-      res.json({
-        message: 'Insumos, detalle de paquetes y resumen médico guardados correctamente',
-        insertedRows: result.affectedRows,
-      });
-    });
-  });
-});
-
-
-router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
-  const { id_solicitud } = req.params;
-
-  const query = `
-    SELECT 
-      si.id,
-      si.tipo_insumo,
-      si.insumo_id,
-      si.nombre_insumo,
-      si.cantidad,
-      si.disponibilidad,
-      si.estado_insumos,
-      sc.folio,
-      sc.ap_paterno,
-      sc.ap_materno,
-      sc.nombre_paciente,
-      sc.sexo,
-      sc.tipo_admision,
-      sc.tipo_intervencion,
-      sc.nombre_especialidad,
-      sc.fecha_solicitada,
-      sc.hora_solicitada,
-      sc.sala_quirofano,
-      sc.procedimientos_paciente,
-      sc.nombre_cirujano,
-      sc.resumen_medico -- Incluimos el resumen médico
-    FROM solicitud_insumos si
-    JOIN solicitudes_cirugia sc ON si.id_solicitud = sc.id_solicitud
-    WHERE si.id_solicitud = ?
-  `;
-
-  db.query(query, [id_solicitud], (err, results) => {
-    if (err) {
-      console.error('Error al obtener insumos y datos del paciente:', err);
-      return res.status(500).json({ message: 'Error al obtener insumos y datos del paciente', error: err });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'No se encontraron insumos para esta solicitud' });
-    }
-
-    res.json(results);
-  });
-});
-
-
-
-
+// Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
   const { id } = req.params;
   const {
@@ -313,74 +214,24 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     disponibilidad_medicamentos
   } = req.body;
 
-  // Objeto para almacenar solo los campos que realmente se van a actualizar
-  const dataToUpdate = {};
-  const availabilityFieldsToUpdate = {};
-
-  // Función para manejar cada tipo de insumo
-  const handleInsumoType = (type, items, quantityField, availabilityField) => {
-    if (items && items.length > 0) {
-      // Si hay items, agregar al objeto de actualización
-      dataToUpdate[type] = Array.isArray(items) ? items.join(', ') : items;
-      dataToUpdate[quantityField] = quantityField ? 
-        (Array.isArray(req.body[quantityField]) ? req.body[quantityField].join(', ') : req.body[quantityField]) 
-        : null;
-      
-      // Solo agregar disponibilidad si se proporciona explícitamente
-      if (req.body[availabilityField]) {
-        availabilityFieldsToUpdate[availabilityField] = req.body[availabilityField];
-      }
-    }
+  // Validación y manejo de campos que pueden ser arreglos
+  const dataToUpdate = {
+    material_adicional: Array.isArray(material_adicional) ? material_adicional.join(', ') : material_adicional || null,
+    material_externo: Array.isArray(material_externo) ? material_externo.join(', ') : material_externo || null,
+    servicios: Array.isArray(servicios) ? servicios.join(', ') : servicios || null,
+    nombre_paquete: nombre_paquete || null,
+    estado_insumos: estado_insumos || 'Sin solicitud', // Valor por defecto
+    cantidad_adicional: Array.isArray(cantidad_adicional) ? cantidad_adicional.join(', ') : cantidad_adicional || null,
+    cantidad_externo: cantidad_externo || null,
+    cantidad_servicios: cantidad_servicios || null,
+    cantidad_paquete: cantidad_paquete || null,
+    resumen_medico: resumen_medico || null,
+    disponibilidad_adicional: disponibilidad_adicional || "0",
+    disponibilidad_externo: disponibilidad_externo || "0",
+    disponibilidad_servicios: disponibilidad_servicios || "0",
+    disponibilidad_paquetes: disponibilidad_paquetes || "0",
+    disponibilidad_medicamentos: disponibilidad_medicamentos || "0"
   };
-
-  // Procesar cada tipo de insumo
-  handleInsumoType(
-    'material_adicional', 
-    material_adicional, 
-    'cantidad_adicional', 
-    'disponibilidad_adicional'
-  );
-
-  handleInsumoType(
-    'material_externo', 
-    material_externo, 
-    'cantidad_externo', 
-    'disponibilidad_externo'
-  );
-
-  handleInsumoType(
-    'servicios', 
-    servicios, 
-    'cantidad_servicios', 
-    'disponibilidad_servicios'
-  );
-
-  handleInsumoType(
-    'nombre_paquete', 
-    nombre_paquete, 
-    'cantidad_paquete', 
-    'disponibilidad_paquetes'
-  );
-
-  handleInsumoType(
-    'medicamentos', 
-    medicamentos, 
-    'cantidad_medicamento', 
-    'disponibilidad_medicamentos'
-  );
-
-  // Agregar campos adicionales
-  if (estado_insumos) {
-    dataToUpdate.estado_insumos = estado_insumos;
-  }
-  if (resumen_medico) {
-    dataToUpdate.resumen_medico = resumen_medico;
-  }
-
-  // Si no hay campos para actualizar, devolver error
-  if (Object.keys(dataToUpdate).length === 0) {
-    return res.status(400).json({ message: 'No hay datos para actualizar' });
-  }
 
   // Generar query dinámico para actualizar solo los campos enviados
   const fields = Object.keys(dataToUpdate)
@@ -402,17 +253,7 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
       return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
 
-    // Imprimir los datos actualizados para verificación
-    console.log('Datos actualizados:', {
-      dataToUpdate,
-      availabilityFieldsToUpdate
-    });
-
-    res.json({ 
-      message: 'Solicitud actualizada correctamente', 
-      id,
-      updatedFields: Object.keys(dataToUpdate)
-    });
+    res.json({ message: 'Solicitud actualizada correctamente', id });
   });
 });
 
