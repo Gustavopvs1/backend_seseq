@@ -276,7 +276,8 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     disponibilidad_material_externo = '',
     disponibilidad_servicios = '',
     disponibilidad_paquetes = '',
-    disponibilidad_medicamentos = ''
+    disponibilidad_medicamentos = '',
+    comentarios_insumos = ''
   } = req.body;
 
   // Filtrar las categorías que tienen datos para validar
@@ -331,7 +332,8 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
       disponibilidad_servicios = ?,
       disponibilidad_paquetes = ?,
       disponibilidad_medicamentos = ?,
-      estado_insumos = ?
+      estado_insumos = ?,
+      comentarios_insumos = ?
     WHERE id_solicitud = ?
   `;
 
@@ -353,6 +355,7 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     disponibilidad_paquetes,
     disponibilidad_medicamentos,
     estado_insumos,
+    comentarios_insumos,
     id
   ];
 
@@ -381,7 +384,8 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
         disponibilidad_servicios,
         disponibilidad_paquetes,
         disponibilidad_medicamentos,
-        estado_insumos
+        estado_insumos,
+        comentarios_insumos
       }
     });
   });
