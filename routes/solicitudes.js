@@ -23,20 +23,21 @@ const removeDashes = (dateString) => {
 
 // Ruta para obtener todas las solicitudes de cirugía
 router.get('/', (req, res) => {
-    db.query('SELECT * FROM solicitudes_cirugia', (err, results) => { // Ejecuta una consulta para obtener todas las solicitudes de cirugía
+    db.query('SELECT *, COALESCE(estado_insumos, "Pendiente") as estado_insumos FROM solicitudes_cirugia', (err, results) => {
         if (err) {
-            console.error('Error fetching solicitudes:', err); // Muestra un error en la consola si ocurre un problema con la consulta
-            res.status(500).json({ error: 'Error fetching solicitudes' }); // Envía una respuesta de error al cliente
+            console.error('Error fetching solicitudes:', err);
+            res.status(500).json({ error: 'Error fetching solicitudes' });
         } else {
-            // Formatear las fechas para visualización
             results.forEach(solicitud => {
-                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud); // Formatea la fecha de solicitud
-                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada); // Formatea la fecha solicitada
-                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada); // Formatea la fecha programada
-                solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento); // Formatea la fecha de nacimiento
+                solicitud.fecha_solicitud = formatDateForDisplay(solicitud.fecha_solicitud);
+                solicitud.fecha_solicitada = formatDateForDisplay(solicitud.fecha_solicitada);
+                solicitud.fecha_programada = formatDateForDisplay(solicitud.fecha_programada);
+                solicitud.fecha_nacimiento = formatDateForDisplay(solicitud.fecha_nacimiento);
+                // Aseguramos que estado_insumos siempre tenga un valor
+                solicitud.estado_insumos = solicitud.estado_insumos || "Pendiente";
             });
-            res.setHeader('Content-Type', 'application/json'); // Establece el tipo de contenido de la respuesta
-            res.json(results); // Envía los resultados de la consulta como respuesta
+            res.setHeader('Content-Type', 'application/json');
+            res.json(results);
         }
     });
 });
