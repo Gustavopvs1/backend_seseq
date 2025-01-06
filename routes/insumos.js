@@ -191,6 +191,146 @@ router.post('/paquetes', (req, res) => {
   });
 });
 
+router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
+  const { id_solicitud } = req.params;
+  const { insumos, resumen_medico } = req.body; // Ahora incluye resumen_medico y detalle_paquete
+
+  if (!Array.isArray(insumos) || insumos.length === 0) {
+    return res.status(400).json({ message: 'Se requiere un array de insumos' });
+  }
+
+  const values = insumos.map((insumo) => [
+    id_solicitud,
+    insumo.tipo_insumo,
+    insumo.insumo_id || null,
+    insumo.nombre_insumo,
+    insumo.cantidad,
+    insumo.disponibilidad || 0, // Por defecto, no disponible
+    insumo.estado_insumos || 'Sin solicitud', // Estado por defecto
+    insumo.detalle_paquete || null, // Detalle del paquete o null si no aplica
+  ]);
+
+  const queryInsumos = `
+    INSERT INTO solicitud_insumos 
+    (id_solicitud, tipo_insumo, insumo_id, nombre_insumo, cantidad, disponibilidad, estado_insumos, detalle_paquete)
+    VALUES ?
+  `;
+
+  const queryResumen = `
+    UPDATE solicitudes_cirugia
+    SET resumen_medico = ?
+    WHERE id_solicitud = ?
+  `;
+
+  db.query(queryInsumos, [values], (err, result) => {
+    if (err) {
+      console.error('Error al insertar insumos:', err);
+      return res.status(500).json({ message: 'Error al insertar insumos', error: err });
+    }
+
+    db.query(queryResumen, [resumen_medico, id_solicitud], (err) => {
+      if (err) {
+        console.error('Error al actualizar resumen_medico:', err);
+        return res.status(500).json({ message: 'Error al actualizar resumen_medico', error: err });
+      }
+
+      res.json({
+        message: 'Insumos, detalle de paquetes y resumen médico guardados correctamente',
+        insertedRows: result.affectedRows,
+      });
+    });
+  });
+});
+
+
+/* router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
+  const { id_solicitud } = req.params;
+
+  const query = `
+    SELECT 
+      si.id,
+      si.tipo_insumo,
+      si.insumo_id,
+      si.nombre_insumo,
+      si.cantidad,
+      si.disponibilidad,
+      si.estado_insumos,
+      sc.folio,
+      sc.ap_paterno,
+      sc.ap_materno,
+      sc.nombre_paciente,
+      sc.sexo,
+      sc.tipo_admision,
+      sc.tipo_intervencion,
+      sc.nombre_especialidad,
+      sc.fecha_solicitada,
+      sc.hora_solicitada,
+      sc.sala_quirofano,
+      sc.procedimientos_paciente,
+      sc.nombre_cirujano,
+      sc.resumen_medico
+    FROM solicitud_insumos si
+    JOIN solicitudes_cirugia sc ON si.id_solicitud = sc.id_solicitud
+    WHERE si.id_solicitud = ?
+  `;
+
+  db.query(query, [id_solicitud], (err, results) => {
+    if (err) {
+      console.error('Error al obtener insumos y datos del paciente:', err);
+      return res.status(500).json({ message: 'Error al obtener insumos y datos del paciente', error: err });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron insumos para esta solicitud' });
+    }
+
+    res.json(results);
+  });
+}); */
+
+router.patch('/insumos-disponibles/:id_solicitud', (req, res) => {
+  const { id_solicitud } = req.params;
+  const {
+    disponibilidad,
+    cantidad,
+    comentarios_insumos
+  } = req.body;
+
+  const updateQuery = `
+    UPDATE solicitud_insumos
+    SET 
+      disponibilidad = ?,
+      cantidad = ?,
+      comentarios_insumos = ?
+    WHERE id_solicitud = ?
+  `;
+
+  db.query(
+    updateQuery,
+    [disponibilidad, cantidad, comentarios_insumos, id_solicitud],
+    (err, result) => {
+      if (err) {
+        console.error('Error al actualizar los insumos:', err);
+        return res.status(500).json({ 
+          message: 'Error al actualizar los insumos', 
+          error: err 
+        });
+      }
+
+      res.json({ 
+        message: 'Insumos actualizados correctamente',
+        datos: {
+          id_solicitud,
+          disponibilidad,
+          cantidad,
+          comentarios_insumos
+        }
+      });
+    }
+  );
+});
+
+
 // Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
   const { id } = req.params;
