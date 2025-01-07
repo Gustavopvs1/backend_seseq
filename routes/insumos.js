@@ -243,7 +243,7 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
 });
 
 
-/* router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
+router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
 
   const query = `
@@ -268,6 +268,8 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
       sc.sala_quirofano,
       sc.procedimientos_paciente,
       sc.nombre_cirujano,
+      sc.procedimientos_paciente,
+      sc.diagnostico,
       sc.resumen_medico
     FROM solicitud_insumos si
     JOIN solicitudes_cirugia sc ON si.id_solicitud = sc.id_solicitud
@@ -286,7 +288,7 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
 
     res.json(results);
   });
-}); */
+});
 
 router.patch('/insumos-disponibles/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
@@ -532,7 +534,7 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
 });
 
 // Obtener una solicitud por ID
-router.get('/solicitudes-insumos/:id', (req, res) => {
+/* router.get('/solicitudes-insumos/:id', (req, res) => {
   const id = req.params.id;
   db.query('SELECT * FROM solicitudes_cirugia WHERE id_solicitud = ?', [id], (err, results) => {
       if (err) {
@@ -547,7 +549,7 @@ router.get('/solicitudes-insumos/:id', (req, res) => {
           res.json(solicitud);
       }
   });
-});
+}); */
 
 
 router.delete('/insumos/:idInsumo', (req, res) => {
