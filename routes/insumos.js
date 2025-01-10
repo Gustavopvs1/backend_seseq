@@ -255,6 +255,7 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       si.cantidad,
       si.disponibilidad,
       si.estado_insumos,
+      si.detalle_paquete,
       sc.folio,
       sc.ap_paterno,
       sc.ap_materno,
@@ -292,48 +293,44 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
 
 router.patch('/insumos-disponibles/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
-  const {
-    disponibilidad,
-    cantidad,
-    comentarios_insumos
-  } = req.body;
-
+  const insumosActualizados = req.body;
+  
+  const deleteQuery = `
+    DELETE FROM solicitud_insumos 
+    WHERE id_solicitud = ? AND insumo_id = ?`;
+    
   const updateQuery = `
-    UPDATE solicitud_insumos
-    SET 
-      disponibilidad = ?,
-      cantidad = ?,
-      comentarios_insumos = ?
-    WHERE id_solicitud = ?
-  `;
+    UPDATE solicitud_insumos 
+    SET disponibilidad = ?, cantidad = ?
+    WHERE id_solicitud = ? AND insumo_id = ?`;
 
-  db.query(
-    updateQuery,
-    [disponibilidad, cantidad, comentarios_insumos, id_solicitud],
-    (err, result) => {
-      if (err) {
-        console.error('Error al actualizar los insumos:', err);
-        return res.status(500).json({ 
-          message: 'Error al actualizar los insumos', 
-          error: err 
+  db.beginTransaction((err) => {
+    if (err) return res.status(500).json({ error: err });
+
+    insumosActualizados.forEach(insumo => {
+      if (insumo.eliminar) {
+        db.query(deleteQuery, [id_solicitud, insumo.insumo_id], (err) => {
+          if (err) return db.rollback(() => res.status(500).json({ error: err }));
         });
+      } else {
+        db.query(updateQuery, 
+          [insumo.disponibilidad, insumo.cantidad, id_solicitud, insumo.insumo_id], 
+          (err) => {
+            if (err) return db.rollback(() => res.status(500).json({ error: err }));
+          }
+        );
       }
+    });
 
-      res.json({ 
-        message: 'Insumos actualizados correctamente',
-        datos: {
-          id_solicitud,
-          disponibilidad,
-          cantidad,
-          comentarios_insumos
-        }
-      });
-    }
-  );
+    db.commit((err) => {
+      if (err) return db.rollback(() => res.status(500).json({ error: err }));
+      res.json({ message: 'Insumos actualizados correctamente' });
+    });
+  });
 });
 
 
-// Endpoint para actualizar datos en solicitudes_cirugia
+/* // Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
   const { id } = req.params;
   const {
@@ -398,7 +395,7 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
     res.json({ message: 'Solicitud actualizada correctamente', id });
   });
 });
-
+ */
 
 router.patch('/insumos-disponibles/:id', (req, res) => {
   console.log("Datos recibidos:", req.body)
