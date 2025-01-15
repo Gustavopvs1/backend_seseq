@@ -257,6 +257,13 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       si.estado_insumos,
       si.detalle_paquete,
       sc.folio,
+      sc.curp,
+      sc.fecha_solicitud,
+      sc.no_expediente,
+      sc.tel_contacto,
+      sc.fecha_nacimiento,
+      sc.edad,
+      sc.cama,
       sc.ap_paterno,
       sc.ap_materno,
       sc.nombre_paciente,
@@ -291,8 +298,8 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
   });
 });
 
-router.patch('/insumos-disponibles/:id_solicitud', (req, res) => {
-  const { id_solicitud } = req.params;
+router.patch('/insumos-disponibles/:id', (req, res) => {
+  const id_solicitud = req.params.id;
   const insumosActualizados = req.body;
   
   const deleteQuery = `
@@ -304,31 +311,118 @@ router.patch('/insumos-disponibles/:id_solicitud', (req, res) => {
     SET disponibilidad = ?, cantidad = ?
     WHERE id_solicitud = ? AND insumo_id = ?`;
 
-  db.beginTransaction((err) => {
-    if (err) return res.status(500).json({ error: err });
+  const checkDisponibilidadQuery = `
+    SELECT 
+      CASE 
+        WHEN COUNT(*) = 0 THEN 'Pendiente'
+        WHEN COUNT(*) = SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) THEN 'Disponible'
+        WHEN SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) > 0 THEN 'Solicitado'
+        ELSE 'Pendiente'
+      END as nuevo_estado
+    FROM solicitud_insumos 
+    WHERE id_solicitud = ?`;
 
+  const updateEstadoQuery = `
+    UPDATE solicitud_insumos 
+    SET estado_insumos = ?
+    WHERE id_solicitud = ?`;
+
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("Error al iniciar transacción:", err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    let completedQueries = 0;
+    const totalQueries = insumosActualizados.length;
+    let hasError = false;
+
+    // Función para verificar disponibilidad y actualizar estado
+    const actualizarEstado = () => {
+      db.query(checkDisponibilidadQuery, [id_solicitud], (checkErr, results) => {
+        if (checkErr) {
+          hasError = true;
+          console.error("Error al verificar disponibilidad:", checkErr);
+          return db.rollback(() => {
+            res.status(500).json({ error: checkErr.message });
+          });
+        }
+
+        const nuevoEstado = results[0].nuevo_estado;
+        
+        db.query(updateEstadoQuery, [nuevoEstado, id_solicitud], (updateErr) => {
+          if (updateErr) {
+            hasError = true;
+            console.error("Error al actualizar estado:", updateErr);
+            return db.rollback(() => {
+              res.status(500).json({ error: updateErr.message });
+            });
+          }
+
+          db.commit((commitErr) => {
+            if (commitErr) {
+              console.error("Error al hacer commit:", commitErr);
+              return db.rollback(() => {
+                res.status(500).json({ error: commitErr.message });
+              });
+            }
+            res.json({ 
+              message: 'Insumos actualizados correctamente',
+              nuevo_estado: nuevoEstado 
+            });
+          });
+        });
+      });
+    };
+
+    // Función para verificar si todas las queries se completaron
+    const checkCompletion = () => {
+      if (hasError) return;
+      
+      if (completedQueries === totalQueries) {
+        actualizarEstado();
+      }
+    };
+
+    // Procesar cada insumo
     insumosActualizados.forEach(insumo => {
       if (insumo.eliminar) {
-        db.query(deleteQuery, [id_solicitud, insumo.insumo_id], (err) => {
-          if (err) return db.rollback(() => res.status(500).json({ error: err }));
+        db.query(deleteQuery, [id_solicitud, insumo.insumo_id], (queryErr) => {
+          if (queryErr && !hasError) {
+            hasError = true;
+            console.error("Error al eliminar insumo:", queryErr);
+            return db.rollback(() => {
+              res.status(500).json({ error: queryErr.message });
+            });
+          }
+          completedQueries++;
+          checkCompletion();
         });
       } else {
-        db.query(updateQuery, 
+        db.query(
+          updateQuery, 
           [insumo.disponibilidad, insumo.cantidad, id_solicitud, insumo.insumo_id], 
-          (err) => {
-            if (err) return db.rollback(() => res.status(500).json({ error: err }));
+          (queryErr) => {
+            if (queryErr && !hasError) {
+              hasError = true;
+              console.error("Error al actualizar insumo:", queryErr);
+              return db.rollback(() => {
+                res.status(500).json({ error: queryErr.message });
+              });
+            }
+            completedQueries++;
+            checkCompletion();
           }
         );
       }
     });
 
-    db.commit((err) => {
-      if (err) return db.rollback(() => res.status(500).json({ error: err }));
-      res.json({ message: 'Insumos actualizados correctamente' });
-    });
+    // Si no hay insumos para procesar, actualizar estado directamente
+    if (totalQueries === 0) {
+      actualizarEstado();
+    }
   });
 });
-
 
 /* // Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
@@ -397,7 +491,7 @@ router.patch('/solicitudes-insumos/:id', (req, res) => {
 });
  */
 
-router.patch('/insumos-disponibles/:id', (req, res) => {
+/* router.patch('/insumos-disponibles/:id', (req, res) => {
   console.log("Datos recibidos:", req.body)
   const id = req.params.id;
   const {
@@ -528,7 +622,7 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
       }
     });
   });
-});
+}); */
 
 // Obtener una solicitud por ID
 /* router.get('/solicitudes-insumos/:id', (req, res) => {
