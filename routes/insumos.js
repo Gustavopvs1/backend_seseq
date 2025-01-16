@@ -242,6 +242,79 @@ router.post('/solicitudes-insumos/:id_solicitud', (req, res) => {
   });
 });
 
+router.get('/solicitudes-insumos', (req, res) => {
+  const query = `
+    SELECT DISTINCT
+      sc.id_solicitud,
+      MIN(si.id) as id,
+      MIN(si.tipo_insumo) as tipo_insumo,
+      MIN(si.insumo_id) as insumo_id,
+      MIN(si.nombre_insumo) as nombre_insumo,
+      MIN(si.cantidad) as cantidad,
+      MIN(si.disponibilidad) as disponibilidad,
+      MIN(si.estado_insumos) as estado_insumos,
+      MIN(si.detalle_paquete) as detalle_paquete,
+      sc.folio,
+      sc.curp,
+      sc.fecha_solicitud,
+      sc.no_expediente,
+      sc.tel_contacto,
+      sc.fecha_nacimiento,
+      sc.edad,
+      sc.cama,
+      sc.ap_paterno,
+      sc.ap_materno,
+      sc.nombre_paciente,
+      sc.sexo,
+      sc.tipo_admision,
+      sc.tipo_intervencion,
+      sc.turno_solicitado,
+      sc.nombre_especialidad,
+      sc.clave_esp,
+      sc.fecha_solicitada,
+      sc.hora_solicitada,
+      sc.sala_quirofano,
+      sc.procedimientos_paciente,
+      sc.nombre_cirujano,
+      sc.diagnostico,
+      sc.resumen_medico
+    FROM solicitudes_cirugia sc
+    INNER JOIN solicitud_insumos si ON sc.id_solicitud = si.id_solicitud
+    GROUP BY 
+      sc.id_solicitud,
+      sc.folio,
+      sc.curp,
+      sc.fecha_solicitud,
+      sc.no_expediente,
+      sc.tel_contacto,
+      sc.fecha_nacimiento,
+      sc.edad,
+      sc.cama,
+      sc.ap_paterno,
+      sc.ap_materno,
+      sc.nombre_paciente,
+      sc.sexo,
+      sc.tipo_admision,
+      sc.tipo_intervencion,
+      sc.nombre_especialidad,
+      sc.fecha_solicitada,
+      sc.hora_solicitada,
+      sc.sala_quirofano,
+      sc.procedimientos_paciente,
+      sc.nombre_cirujano,
+      sc.diagnostico,
+      sc.resumen_medico
+    ORDER BY sc.id_solicitud DESC`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error al obtener solicitudes de insumos:', err);
+      return res.status(500).json({ message: 'Error al obtener solicitudes de insumos', error: err });
+    }
+    res.json(results);
+  });
+});
+
 
 router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
   const { id_solicitud } = req.params;
@@ -249,6 +322,7 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
   const query = `
     SELECT 
       si.id,
+      si.id_solicitud,
       si.tipo_insumo,
       si.insumo_id,
       si.nombre_insumo,
