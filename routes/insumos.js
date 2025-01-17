@@ -375,6 +375,15 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
 router.patch('/insumos-disponibles/:id', (req, res) => {
   const id_solicitud = req.params.id;
   const insumosActualizados = req.body;
+
+  const insertQuery = `
+  INSERT INTO solicitud_insumos (id_solicitud, insumo_id, tipo_insumo, cantidad, disponibilidad, estado_insumos)
+  VALUES (?, ?, ?, ?, ?, ?)
+  ON DUPLICATE KEY UPDATE 
+  cantidad = VALUES(cantidad), 
+  disponibilidad = VALUES(disponibilidad), 
+  estado_insumos = VALUES(estado_insumos)
+`;
   
   const deleteQuery = `
     DELETE FROM solicitud_insumos 
@@ -388,10 +397,10 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
   const checkDisponibilidadQuery = `
     SELECT 
       CASE 
-        WHEN COUNT(*) = 0 THEN 'Pendiente'
+        WHEN COUNT(*) = 0 THEN 'Solicitado'
         WHEN COUNT(*) = SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) THEN 'Disponible'
         WHEN SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) > 0 THEN 'Solicitado'
-        ELSE 'Pendiente'
+        ELSE 'Solicitado'
       END as nuevo_estado
     FROM solicitud_insumos 
     WHERE id_solicitud = ?`;
