@@ -377,38 +377,51 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
   const insumosActualizados = req.body;
 
   const insertQuery = `
-  INSERT INTO solicitud_insumos (id_solicitud, insumo_id, tipo_insumo, cantidad, disponibilidad, estado_insumos)
-  VALUES (?, ?, ?, ?, ?, ?)
-  ON DUPLICATE KEY UPDATE 
-  cantidad = VALUES(cantidad), 
-  disponibilidad = VALUES(disponibilidad), 
-  estado_insumos = VALUES(estado_insumos)
-`;
+    INSERT INTO solicitud_insumos 
+    (id_solicitud, tipo_insumo, insumo_id, nombre_insumo, cantidad, disponibilidad, detalle_paquete)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
   
-  const deleteQuery = `
-    DELETE FROM solicitud_insumos 
-    WHERE id_solicitud = ? AND insumo_id = ?`;
-    
   const updateQuery = `
     UPDATE solicitud_insumos 
-    SET disponibilidad = ?, cantidad = ?
-    WHERE id_solicitud = ? AND insumo_id = ?`;
+    SET disponibilidad = ?, 
+        cantidad = ?
+    WHERE id_solicitud = ? 
+    AND insumo_id = ?
+    AND (
+      (detalle_paquete = ? AND detalle_paquete IS NOT NULL)
+      OR 
+      (detalle_paquete IS NULL AND ? IS NULL)
+    )
+  `;
 
+  const deleteQuery = `
+  DELETE FROM solicitud_insumos 
+  WHERE id_solicitud = ? 
+  AND insumo_id = ?
+  AND (
+    (tipo_insumo = 'paquete' AND detalle_paquete = ?)
+    OR 
+    (tipo_insumo != 'paquete' AND detalle_paquete IS NULL)
+  )
+`;
   const checkDisponibilidadQuery = `
-    SELECT 
-      CASE 
-        WHEN COUNT(*) = 0 THEN 'Solicitado'
-        WHEN COUNT(*) = SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) THEN 'Disponible'
-        WHEN SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) > 0 THEN 'Solicitado'
-        ELSE 'Solicitado'
-      END as nuevo_estado
-    FROM solicitud_insumos 
-    WHERE id_solicitud = ?`;
+  SELECT 
+    CASE 
+      WHEN COUNT(*) = 0 THEN 'Sin solicitud'
+      WHEN COUNT(*) = SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) THEN 'Disponible'
+      WHEN SUM(CASE WHEN disponibilidad = 1 THEN 1 ELSE 0 END) > 0 THEN 'Solicitado'
+      ELSE 'Sin solicitud'
+    END as nuevo_estado
+  FROM solicitud_insumos 
+  WHERE id_solicitud = ?
+`;
 
   const updateEstadoQuery = `
     UPDATE solicitud_insumos 
     SET estado_insumos = ?
-    WHERE id_solicitud = ?`;
+    WHERE id_solicitud = ?
+  `;
 
   db.beginTransaction((err) => {
     if (err) {
@@ -420,87 +433,113 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     const totalQueries = insumosActualizados.length;
     let hasError = false;
 
-    // Función para verificar disponibilidad y actualizar estado
     const actualizarEstado = () => {
       db.query(checkDisponibilidadQuery, [id_solicitud], (checkErr, results) => {
         if (checkErr) {
           hasError = true;
-          console.error("Error al verificar disponibilidad:", checkErr);
           return db.rollback(() => {
             res.status(500).json({ error: checkErr.message });
           });
         }
-
+    
         const nuevoEstado = results[0].nuevo_estado;
         
+        // Actualizamos el estado siempre
         db.query(updateEstadoQuery, [nuevoEstado, id_solicitud], (updateErr) => {
           if (updateErr) {
             hasError = true;
-            console.error("Error al actualizar estado:", updateErr);
             return db.rollback(() => {
               res.status(500).json({ error: updateErr.message });
             });
           }
-
-          db.commit((commitErr) => {
-            if (commitErr) {
-              console.error("Error al hacer commit:", commitErr);
-              return db.rollback(() => {
-                res.status(500).json({ error: commitErr.message });
-              });
-            }
-            res.json({ 
-              message: 'Insumos actualizados correctamente',
-              nuevo_estado: nuevoEstado 
-            });
-          });
+          finalizarTransaccion(nuevoEstado);
         });
       });
     };
 
-    // Función para verificar si todas las queries se completaron
+    const finalizarTransaccion = (estado) => {
+      db.commit((commitErr) => {
+        if (commitErr) {
+          return db.rollback(() => {
+            res.status(500).json({ error: commitErr.message });
+          });
+        }
+        res.json({ 
+          message: 'Insumos actualizados correctamente',
+          nuevo_estado: estado 
+        });
+      });
+    };
+
     const checkCompletion = () => {
       if (hasError) return;
-      
       if (completedQueries === totalQueries) {
         actualizarEstado();
       }
     };
 
-    // Procesar cada insumo
+    // Procesar cada insumo según su operación
     insumosActualizados.forEach(insumo => {
-      if (insumo.eliminar) {
-        db.query(deleteQuery, [id_solicitud, insumo.insumo_id], (queryErr) => {
-          if (queryErr && !hasError) {
-            hasError = true;
-            console.error("Error al eliminar insumo:", queryErr);
-            return db.rollback(() => {
-              res.status(500).json({ error: queryErr.message });
-            });
-          }
-          completedQueries++;
-          checkCompletion();
-        });
-      } else {
-        db.query(
-          updateQuery, 
-          [insumo.disponibilidad, insumo.cantidad, id_solicitud, insumo.insumo_id], 
-          (queryErr) => {
-            if (queryErr && !hasError) {
-              hasError = true;
-              console.error("Error al actualizar insumo:", queryErr);
-              return db.rollback(() => {
-                res.status(500).json({ error: queryErr.message });
-              });
-            }
-            completedQueries++;
-            checkCompletion();
-          }
-        );
+      switch(insumo.operacion) {
+        case 'insertar':
+          db.query(
+            insertQuery, 
+            [
+              id_solicitud,
+              insumo.tipo_insumo,
+              insumo.insumo_id,
+              insumo.nombre_insumo,
+              insumo.cantidad,
+              insumo.disponibilidad,
+              insumo.tipo_insumo === 'paquete' ? insumo.detalle_paquete : null
+            ], 
+            handleQueryError
+          );
+          break;
+
+        case 'actualizar':
+          db.query(
+            updateQuery, 
+            [
+              insumo.disponibilidad,
+              insumo.cantidad,
+              id_solicitud,
+              insumo.insumo_id,
+              insumo.detalle_paquete || null,
+              insumo.detalle_paquete || null
+            ], 
+            handleQueryError
+          );
+          break;
+
+        case 'eliminar':
+          db.query(
+            deleteQuery, 
+            [
+              id_solicitud,
+              insumo.insumo_id,
+              insumo.detalle_paquete || null,
+              insumo.detalle_paquete || null
+            ], 
+            handleQueryError
+          );
+          break;
       }
     });
 
-    // Si no hay insumos para procesar, actualizar estado directamente
+    function handleQueryError(error) {
+      if (error && !hasError) {
+        hasError = true;
+        console.error("Error en operación:", error);
+        return db.rollback(() => {
+          res.status(500).json({ error: error.message });
+        });
+      }
+      completedQueries++;
+      checkCompletion();
+    }
+
+    // Si no hay insumos para procesar
     if (totalQueries === 0) {
       actualizarEstado();
     }
