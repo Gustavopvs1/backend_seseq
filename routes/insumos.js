@@ -272,6 +272,7 @@ router.get('/solicitudes-insumos', (req, res) => {
       sc.nombre_especialidad,
       sc.clave_esp,
       sc.fecha_solicitada,
+      sc.fecha_programada,
       sc.hora_solicitada,
       sc.sala_quirofano,
       sc.procedimientos_paciente,
@@ -330,6 +331,8 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       si.disponibilidad,
       si.estado_insumos,
       si.detalle_paquete,
+      si.comentarios_insumos,
+      si.comentarios_compras,
       sc.folio,
       sc.curp,
       sc.fecha_solicitud,
@@ -358,6 +361,12 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
     WHERE si.id_solicitud = ?
   `;
 
+  const formatFecha = (fecha) => {
+    if (!fecha) return null; // Maneja valores nulos o indefinidos
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   db.query(query, [id_solicitud], (err, results) => {
     if (err) {
       console.error('Error al obtener insumos y datos del paciente:', err);
@@ -368,7 +377,15 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       return res.status(404).json({ message: 'No se encontraron insumos para esta solicitud' });
     }
 
-    res.json(results);
+    // Formatear fechas en los resultados
+    const formattedResults = results.map((item) => ({
+      ...item,
+      fecha_solicitud: formatFecha(item.fecha_solicitud),
+      fecha_solicitada: formatFecha(item.fecha_solicitada),
+      fecha_nacimiento: formatFecha(item.fecha_nacimiento),
+    }));
+
+    res.json(formattedResults);
   });
 });
 
@@ -545,6 +562,7 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
     }
   });
 });
+
 
 /* // Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
