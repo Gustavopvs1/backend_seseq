@@ -272,6 +272,7 @@ router.get('/solicitudes-insumos', (req, res) => {
       sc.nombre_especialidad,
       sc.clave_esp,
       sc.fecha_solicitada,
+      sc.fecha_programada,
       sc.hora_solicitada,
       sc.sala_quirofano,
       sc.procedimientos_paciente,
@@ -562,43 +563,6 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
   });
 });
 
-// Endpoint para guardar comentarios
-router.patch('/guardar-comentario/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { tipo, comentario } = req.body;
-
-    if (!['insumos', 'compras'].includes(tipo)) {
-      return res.status(400).json({ 
-        error: 'Tipo de comentario inválido' 
-      });
-    }
-
-    const campoActualizar = `comentarios_${tipo}`;
-    
-    const query = `
-      UPDATE solicitud_insumos 
-      SET ${campoActualizar} = ? 
-      WHERE id = ?
-    `;
-
-    db.query(query, [comentario, id], (err, results) => {
-      if (err) {
-        console.error(`Error al guardar comentario de ${tipo}:`, err);
-        return res.status(500).json({ 
-          error: `Error al guardar el comentario de ${tipo}` 
-        });
-      }
-
-      res.json({ 
-        message: `Comentario de ${tipo} actualizado exitosamente` 
-      });
-    });
-  } catch (error) {
-    console.error('Error en el servidor:', error);
-    res.status(500).json({ error: 'Error al procesar la solicitud' });
-  }
-});
 
 /* // Endpoint para actualizar datos en solicitudes_cirugia
 router.patch('/solicitudes-insumos/:id', (req, res) => {
