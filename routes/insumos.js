@@ -330,6 +330,8 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       si.disponibilidad,
       si.estado_insumos,
       si.detalle_paquete,
+      si.comentarios_insumos,
+      si.comentarios_compras,
       sc.folio,
       sc.curp,
       sc.fecha_solicitud,
@@ -358,6 +360,12 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
     WHERE si.id_solicitud = ?
   `;
 
+  const formatFecha = (fecha) => {
+    if (!fecha) return null; // Maneja valores nulos o indefinidos
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   db.query(query, [id_solicitud], (err, results) => {
     if (err) {
       console.error('Error al obtener insumos y datos del paciente:', err);
@@ -368,7 +376,15 @@ router.get('/solicitudes-insumos/:id_solicitud', (req, res) => {
       return res.status(404).json({ message: 'No se encontraron insumos para esta solicitud' });
     }
 
-    res.json(results);
+    // Formatear fechas en los resultados
+    const formattedResults = results.map((item) => ({
+      ...item,
+      fecha_solicitud: formatFecha(item.fecha_solicitud),
+      fecha_solicitada: formatFecha(item.fecha_solicitada),
+      fecha_nacimiento: formatFecha(item.fecha_nacimiento),
+    }));
+
+    res.json(formattedResults);
   });
 });
 
@@ -544,6 +560,44 @@ router.patch('/insumos-disponibles/:id', (req, res) => {
       actualizarEstado();
     }
   });
+});
+
+// Endpoint para guardar comentarios
+router.patch('/guardar-comentario/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipo, comentario } = req.body;
+
+    if (!['insumos', 'compras'].includes(tipo)) {
+      return res.status(400).json({ 
+        error: 'Tipo de comentario inválido' 
+      });
+    }
+
+    const campoActualizar = `comentarios_${tipo}`;
+    
+    const query = `
+      UPDATE solicitud_insumos 
+      SET ${campoActualizar} = ? 
+      WHERE id = ?
+    `;
+
+    db.query(query, [comentario, id], (err, results) => {
+      if (err) {
+        console.error(`Error al guardar comentario de ${tipo}:`, err);
+        return res.status(500).json({ 
+          error: `Error al guardar el comentario de ${tipo}` 
+        });
+      }
+
+      res.json({ 
+        message: `Comentario de ${tipo} actualizado exitosamente` 
+      });
+    });
+  } catch (error) {
+    console.error('Error en el servidor:', error);
+    res.status(500).json({ error: 'Error al procesar la solicitud' });
+  }
 });
 
 /* // Endpoint para actualizar datos en solicitudes_cirugia
