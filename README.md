@@ -23,7 +23,7 @@ backend/
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/tuusuario/tu-repo.git
+   git clone https://github.com/tuusuario/tu-repo.git](https://github.com/Gustavopvs1/backend_seseq.git
    cd backend_seseq
    ```
 
